@@ -65,38 +65,37 @@ body {
 }
 
 #settingsBtn{
-  position:fixed;
-  top:10px;
-  right:10px;
+  display:inline-block;
   font-size:22px;
   cursor:pointer;
   background:white;
   border:2px solid #333;
   border-radius:8px;
   padding:4px 8px;
+  margin-bottom:12px;
 }
 
 #settingsMenu{
   display:none;
-  position:fixed;
-  top:50px;
-  right:10px;
   background:white;
   border:2px solid #333;
   border-radius:8px;
   padding:10px;
+  margin-bottom:12px;
+  width:max-content;
 }
 </style>
 </head>
 
 <body>
 
+<h1>🌱 Grow a Garden</h1>
+
 <div id="settingsBtn">⚙</div>
 <div id="settingsMenu">
 <button onclick="resetGame()">Reset Everything</button>
 </div>
 
-<h1>🌱 Grow a Garden</h1>
 <div id="money"></div>
 
 <h2>Shop</h2>
