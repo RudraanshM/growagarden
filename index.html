@@ -20,6 +20,16 @@ body {
 }
 .cooldown { font-size:12px; }
 
+#saveBtn{
+  margin-bottom:15px;
+  padding:8px 14px;
+  background:#2196f3;
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
 .silver { color:silver; }
 .gold { color:gold; }
 
@@ -69,6 +79,8 @@ body {
 <body>
 <h1>🌱 Grow a Garden</h1>
 <div id="money"></div>
+
+<button id="saveBtn" onclick="saveGame()">💾 Save Game</button>
 
 <h2>Shop</h2>
 <div id="shop"></div>
@@ -145,17 +157,13 @@ const plants=[
 {name:"Giant Pinecone",type:"multi",buy:55000000,gain:64980},
 {name:"Elder Strawberry",type:"multi",buy:70000000,gain:81225},
 {name:"Romanesco",type:"multi",buy:88000000,gain:149815},
-
 {name:"Crimson Thorn",type:"multi",buy:10000000000,gain:189525},
 {name:"Zebrazincle",type:"multi",buy:21000000000,gain:234650},
 {name:"Octobloom",type:"multi",buy:33000000000,gain:260721},
-
 {name:"Beast Buttercup",type:"single",buy:500000000000,gain:2707500},
 {name:"Alien Apple",type:"multi",buy:1000000000000,gain:902500},
-
 {name:"Rubiks Cube Blossom",type:"multi",buy:0,gain:1e15},
-
-{name:"Rickroll Berry",type:"multi",buy:0,gain:999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999}
+{name:"Rickroll Berry",type:"multi",buy:0,gain:1e100}
 ];
 
 function updateMoney(){
@@ -204,6 +212,8 @@ box.appendChild(cd);
 
 garden.appendChild(box);
 
+autoSave();
+
 if(p.type==="single"){
 
 const btn=document.createElement("button");
@@ -213,6 +223,7 @@ btn.onclick=()=>{
 money+=p.gain*mut.m;
 updateMoney();
 box.remove();
+autoSave();
 };
 
 box.appendChild(btn);
@@ -223,16 +234,15 @@ let t=5;
 cd.textContent="Harvest in "+t+"s";
 
 setInterval(()=>{
-
 t--;
 cd.textContent="Harvest in "+t+"s";
 
 if(t<=0){
 money+=p.gain*mut.m;
 updateMoney();
+autoSave();
 t=5;
 }
-
 },1000);
 
 }
@@ -282,14 +292,6 @@ if(c==="disco0598") forceMutation="disco";
 
 if(c==="dev0598"){
 devMode=true;
-
-setInterval(()=>{
-addToGarden(plants.find(p=>p.name==="Crimson Thorn"),{m:125,c:"disco"});
-addToGarden(plants.find(p=>p.name==="Zebrazincle"),{m:125,c:"disco"});
-addToGarden(plants.find(p=>p.name==="Beast Buttercup"),{m:125,c:"disco"});
-addToGarden(plants.find(p=>p.name==="Octobloom"),{m:125,c:"disco"});
-addToGarden(plants.find(p=>p.name==="Alien Apple"),{m:125,c:"disco"});
-},1000);
 }
 
 if(c==="rickroll0598"){
@@ -300,8 +302,27 @@ if(c==="rickroll0598pro"){
 addToGarden(plants.find(p=>p.name==="Rickroll Berry"),{m:1e100,c:"rickroll"});
 }
 
+autoSave();
 }
 
+function saveGame(){
+localStorage.setItem("gardenMoney",money);
+alert("Saved!");
+}
+
+function loadGame(){
+const savedMoney=localStorage.getItem("gardenMoney");
+
+if(savedMoney){
+money=Number(savedMoney);
+}
+}
+
+function autoSave(){
+localStorage.setItem("gardenMoney",money);
+}
+
+loadGame();
 createShop();
 updateMoney();
 
