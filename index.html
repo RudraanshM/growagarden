@@ -23,22 +23,20 @@ body {
 .silver { color:silver; }
 .gold { color:gold; }
 
-.rainbow {
+.rainbow{
   background:linear-gradient(90deg,red,orange,yellow,green,blue,purple);
   background-size:300%;
   -webkit-background-clip:text;
   color:transparent;
   animation:rainbow 3s linear infinite;
 }
-@keyframes rainbow {
+@keyframes rainbow{
   0%{background-position:0%}
   100%{background-position:100%}
 }
 
-.disco {
-  animation:disco 0.5s infinite;
-}
-@keyframes disco {
+.disco{ animation:disco .5s infinite; }
+@keyframes disco{
   0%{color:red}
   20%{color:yellow}
   40%{color:green}
@@ -49,7 +47,7 @@ body {
 
 .admin{
   display:inline-block;
-  animation:adminRock 0.15s infinite;
+  animation:adminRock .15s infinite;
 }
 @keyframes adminRock{
   0%{transform:rotate(-15deg)}
@@ -111,46 +109,50 @@ body {
 <script>
 
 let money=100;
-
 let forceMutation=null;
 let devMode=false;
-
-let usedCodes={};
 
 const moneyDiv=document.getElementById("money");
 const garden=document.getElementById("garden");
 
+const SAVE_KEY="growGardenSaveV1";
+
 function saveGame(){
-const savedPlants=[...garden.children].map(box=>({
+const plantsData=[...garden.children].map(box=>({
 name:box.dataset.name,
 type:box.dataset.type,
-gain:Number(box.dataset.gain),
+gain:+box.dataset.gain,
 mutation:{
-m:Number(box.dataset.mutM),
-c:box.dataset.mutC
+m:+box.dataset.mutm,
+c:box.dataset.mutc
 }
 }));
 
-localStorage.setItem("growGardenMoney",money);
-localStorage.setItem("growGardenPlants",JSON.stringify(savedPlants));
+localStorage.setItem(SAVE_KEY,JSON.stringify({
+money,
+plants:plantsData
+}));
 }
 
 function loadGame(){
-const savedMoney=localStorage.getItem("growGardenMoney");
-const savedPlants=JSON.parse(localStorage.getItem("growGardenPlants")||"[]");
+const raw=localStorage.getItem(SAVE_KEY);
+if(!raw) return;
 
-if(savedMoney!==null) money=Number(savedMoney);
+const data=JSON.parse(raw);
 
-savedPlants.forEach(p=>{
+money=data.money ?? 100;
+
+(data.plants||[]).forEach(p=>{
 addToGarden(
 {name:p.name,type:p.type,gain:p.gain},
-p.mutation
+p.mutation,
+true
 );
 });
 }
 
 function resetGame(){
-localStorage.clear();
+localStorage.removeItem(SAVE_KEY);
 money=0;
 garden.innerHTML="";
 updateMoney();
@@ -162,65 +164,18 @@ m.style.display=m.style.display==="block"?"none":"block";
 };
 
 function formatNumber(n){
-
-const units=[
-"",
-"K","M","B","T",
-"Qa","Qi","Sx","Sp","Oc","No",
-"Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Od","Nd",
-"Vg","Uvg","Dvg","Tvg","Qavg","Qivg","Sxvg","Spvg","Ocvg","Novg"
-];
-
+const units=["","K","M","B","T"];
 if(n<1000) return Math.floor(n);
-
 let tier=Math.floor(Math.log10(n)/3);
-
-if(tier>=units.length){
-return n.toExponential(2);
-}
-
+if(tier>=units.length) return n.toExponential(2);
 let scale=Math.pow(10,tier*3);
-let scaled=n/scale;
-
-return scaled.toFixed(2)+" "+units[tier];
+return (n/scale).toFixed(2)+" "+units[tier];
 }
 
 const plants=[
 {name:"Carrot",type:"single",buy:10,gain:18},
 {name:"Strawberry",type:"multi",buy:50,gain:14},
-{name:"Blueberry",type:"multi",buy:400,gain:18},
-{name:"Buttercup",type:"single",buy:600,gain:542},
-{name:"Tomato",type:"multi",buy:800,gain:27},
-{name:"Corn",type:"multi",buy:1300,gain:36},
-{name:"Daffodil",type:"single",buy:1000,gain:1000},
-{name:"Watermelon",type:"single",buy:2500,gain:2500},
-{name:"Pumpkin",type:"single",buy:3000,gain:3000},
-{name:"Apple",type:"multi",buy:3250,gain:248},
-{name:"Bamboo",type:"single",buy:4000,gain:3999},
-{name:"Coconut",type:"multi",buy:6000,gain:361},
-{name:"Cactus",type:"multi",buy:15000,gain:3068},
-{name:"Dragonfruit",type:"multi",buy:50000,gain:4287},
-{name:"Mango",type:"multi",buy:100000,gain:5886},
-{name:"Candy Blossom",type:"multi",buy:0,gain:90250},
-{name:"Mushroom",type:"single",buy:150000,gain:136278},
-{name:"Grape",type:"multi",buy:850000,gain:7085},
-{name:"Pepper",type:"multi",buy:1000000,gain:7220},
-{name:"Cacao",type:"multi",buy:2500000,gain:10830},
-{name:"Sunflower",type:"multi",buy:5555555,gain:50138},
-{name:"Beanstalk",type:"multi",buy:10000000,gain:25270},
-{name:"Sugar Apple",type:"multi",buy:25000000,gain:43320},
-{name:"Burning Bud",type:"multi",buy:40000000,gain:63175},
-{name:"Ember Lilly",type:"multi",buy:50000000,gain:60166},
-{name:"Giant Pinecone",type:"multi",buy:55000000,gain:64980},
-{name:"Elder Strawberry",type:"multi",buy:70000000,gain:81225},
-{name:"Romanesco",type:"multi",buy:88000000,gain:149815},
-{name:"Crimson Thorn",type:"multi",buy:10000000000,gain:189525},
-{name:"Zebrazincle",type:"multi",buy:21000000000,gain:234650},
-{name:"Octobloom",type:"multi",buy:33000000000,gain:260721},
-{name:"Beast Buttercup",type:"single",buy:500000000000,gain:2707500},
-{name:"Alien Apple",type:"multi",buy:1000000000000,gain:902500},
-{name:"Rubiks Cube Blossom",type:"multi",buy:0,gain:1e15},
-{name:"Rickroll Berry",type:"multi",buy:0,gain:999999999999999999999999999999999999}
+{name:"Blueberry",type:"multi",buy:400,gain:18}
 ];
 
 function updateMoney(){
@@ -229,7 +184,6 @@ saveGame();
 }
 
 function getMutation(){
-
 if(forceMutation){
 let map={
 silver:{m:5,c:"silver"},
@@ -243,14 +197,13 @@ return map[forceMutation];
 }
 
 let r=Math.random();
-if(r<0.000001) return {m:125,c:"disco"};
 if(r<0.001) return {m:50,c:"rainbow"};
 if(r<0.01) return {m:20,c:"gold"};
 if(r<0.05) return {m:5,c:"silver"};
 return {m:1,c:""};
 }
 
-function addToGarden(p,forceMut){
+function addToGarden(p,forceMut,isLoading=false){
 
 const box=document.createElement("div");
 box.className="plant";
@@ -258,15 +211,15 @@ box.className="plant";
 const title=document.createElement("b");
 title.textContent=p.name;
 
-const mut=forceMut?forceMut:getMutation();
+const mut=forceMut||getMutation();
 
 if(mut.c) title.classList.add(mut.c);
 
 box.dataset.name=p.name;
 box.dataset.type=p.type;
 box.dataset.gain=p.gain;
-box.dataset.mutM=mut.m;
-box.dataset.mutC=mut.c;
+box.dataset.mutm=mut.m;
+box.dataset.mutc=mut.c;
 
 box.appendChild(title);
 
@@ -275,29 +228,24 @@ cd.className="cooldown";
 box.appendChild(cd);
 
 garden.appendChild(box);
-saveGame();
 
 if(p.type==="single"){
-
 const btn=document.createElement("button");
 btn.textContent="Harvest";
 
 btn.onclick=()=>{
 money+=p.gain*mut.m;
-updateMoney();
 box.remove();
-saveGame();
+updateMoney();
 };
 
 box.appendChild(btn);
 
 }else{
-
 let t=5;
 cd.textContent="Harvest in "+t+"s";
 
 setInterval(()=>{
-
 t--;
 cd.textContent="Harvest in "+t+"s";
 
@@ -306,75 +254,39 @@ money+=p.gain*mut.m;
 updateMoney();
 t=5;
 }
-
 },1000);
-
 }
 
+if(!isLoading) saveGame();
 }
 
 function buyPlant(p){
 if(money<p.buy) return alert("Not enough money");
 
 money-=p.buy;
-updateMoney();
-
 addToGarden(p);
+updateMoney();
 }
 
 function createShop(){
-
 const shop=document.getElementById("shop");
 
-plants.filter(p=>p.buy>0).forEach(p=>{
-
+plants.forEach(p=>{
 const d=document.createElement("div");
 d.className="item";
 
-d.innerHTML=`<b>${p.name}</b><br>Buy:${formatNumber(p.buy)}<br>Gives:${formatNumber(p.gain)}<br><button>Buy</button>`;
+d.innerHTML=`<b>${p.name}</b><br>
+Buy:${formatNumber(p.buy)}<br>
+Gives:${formatNumber(p.gain)}<br>
+<button>Buy</button>`;
 
 d.querySelector("button").onclick=()=>buyPlant(p);
 
 shop.appendChild(d);
-
 });
-
 }
 
-function checkCode(){
-
-const c=document.getElementById("codeInput").value.trim().toLowerCase();
-
-if(c==="cubiksrubik"){
-addToGarden(plants.find(p=>p.name==="Rubiks Cube Blossom"));
-}
-
-if(c==="silver0598") forceMutation="silver";
-if(c==="gold0598") forceMutation="gold";
-if(c==="rainbow0598") forceMutation="rainbow";
-if(c==="disco0598") forceMutation="disco";
-
-if(c==="dev0598"){
-devMode=true;
-
-setInterval(()=>{
-addToGarden(plants.find(p=>p.name==="Crimson Thorn"),{m:125,c:"disco"});
-addToGarden(plants.find(p=>p.name==="Zebrazincle"),{m:125,c:"disco"});
-addToGarden(plants.find(p=>p.name==="Beast Buttercup"),{m:125,c:"disco"});
-addToGarden(plants.find(p=>p.name==="Octobloom"),{m:125,c:"disco"});
-addToGarden(plants.find(p=>p.name==="Alien Apple"),{m:125,c:"disco"});
-},1000);
-}
-
-if(c==="rickroll0598"){
-addToGarden(plants.find(p=>p.name==="Rickroll Berry"));
-}
-
-if(c==="rickroll0598pro"){
-addToGarden(plants.find(p=>p.name==="Rickroll Berry"),{m:1e100,c:"rickroll"});
-}
-
-}
+function checkCode(){}
 
 createShop();
 loadGame();
