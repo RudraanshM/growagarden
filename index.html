@@ -63,10 +63,39 @@ body {
   color:transparent;
   animation:rainbow 1s infinite;
 }
+
+#settingsBtn{
+  position:fixed;
+  top:10px;
+  right:10px;
+  font-size:22px;
+  cursor:pointer;
+  background:white;
+  border:2px solid #333;
+  border-radius:8px;
+  padding:4px 8px;
+}
+
+#settingsMenu{
+  display:none;
+  position:fixed;
+  top:50px;
+  right:10px;
+  background:white;
+  border:2px solid #333;
+  border-radius:8px;
+  padding:10px;
+}
 </style>
 </head>
 
 <body>
+
+<div id="settingsBtn">⚙</div>
+<div id="settingsMenu">
+<button onclick="resetGame()">Reset Everything</button>
+</div>
+
 <h1>🌱 Grow a Garden</h1>
 <div id="money"></div>
 
@@ -91,6 +120,47 @@ let usedCodes={};
 
 const moneyDiv=document.getElementById("money");
 const garden=document.getElementById("garden");
+
+function saveGame(){
+const savedPlants=[...garden.children].map(box=>({
+name:box.dataset.name,
+type:box.dataset.type,
+gain:Number(box.dataset.gain),
+mutation:{
+m:Number(box.dataset.mutM),
+c:box.dataset.mutC
+}
+}));
+
+localStorage.setItem("growGardenMoney",money);
+localStorage.setItem("growGardenPlants",JSON.stringify(savedPlants));
+}
+
+function loadGame(){
+const savedMoney=localStorage.getItem("growGardenMoney");
+const savedPlants=JSON.parse(localStorage.getItem("growGardenPlants")||"[]");
+
+if(savedMoney!==null) money=Number(savedMoney);
+
+savedPlants.forEach(p=>{
+addToGarden(
+{name:p.name,type:p.type,gain:p.gain},
+p.mutation
+);
+});
+}
+
+function resetGame(){
+localStorage.clear();
+money=0;
+garden.innerHTML="";
+updateMoney();
+}
+
+document.getElementById("settingsBtn").onclick=()=>{
+const m=document.getElementById("settingsMenu");
+m.style.display=m.style.display==="block"?"none":"block";
+};
 
 function formatNumber(n){
 
@@ -145,21 +215,18 @@ const plants=[
 {name:"Giant Pinecone",type:"multi",buy:55000000,gain:64980},
 {name:"Elder Strawberry",type:"multi",buy:70000000,gain:81225},
 {name:"Romanesco",type:"multi",buy:88000000,gain:149815},
-
 {name:"Crimson Thorn",type:"multi",buy:10000000000,gain:189525},
 {name:"Zebrazincle",type:"multi",buy:21000000000,gain:234650},
 {name:"Octobloom",type:"multi",buy:33000000000,gain:260721},
-
 {name:"Beast Buttercup",type:"single",buy:500000000000,gain:2707500},
 {name:"Alien Apple",type:"multi",buy:1000000000000,gain:902500},
-
 {name:"Rubiks Cube Blossom",type:"multi",buy:0,gain:1e15},
-
-{name:"Rickroll Berry",type:"multi",buy:0,gain:999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999}
+{name:"Rickroll Berry",type:"multi",buy:0,gain:999999999999999999999999999999999999}
 ];
 
 function updateMoney(){
 moneyDiv.textContent="Money: "+formatNumber(money);
+saveGame();
 }
 
 function getMutation(){
@@ -196,6 +263,12 @@ const mut=forceMut?forceMut:getMutation();
 
 if(mut.c) title.classList.add(mut.c);
 
+box.dataset.name=p.name;
+box.dataset.type=p.type;
+box.dataset.gain=p.gain;
+box.dataset.mutM=mut.m;
+box.dataset.mutC=mut.c;
+
 box.appendChild(title);
 
 const cd=document.createElement("div");
@@ -203,6 +276,7 @@ cd.className="cooldown";
 box.appendChild(cd);
 
 garden.appendChild(box);
+saveGame();
 
 if(p.type==="single"){
 
@@ -213,6 +287,7 @@ btn.onclick=()=>{
 money+=p.gain*mut.m;
 updateMoney();
 box.remove();
+saveGame();
 };
 
 box.appendChild(btn);
@@ -303,6 +378,7 @@ addToGarden(plants.find(p=>p.name==="Rickroll Berry"),{m:1e100,c:"rickroll"});
 }
 
 createShop();
+loadGame();
 updateMoney();
 
 </script>
