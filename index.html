@@ -472,6 +472,25 @@ autoSave();
 
 }
 
+/* ✅ ADDED COMMAND */
+else if(cmd.startsWith("/givemoney(")){
+
+const match=cmd.match(/\/givemoney\((.*?)\)/);
+if(!match) return;
+
+let amount=Number(match[1]);
+
+if(isNaN(amount)){
+alert("Invalid number");
+return;
+}
+
+money+=amount;
+updateMoney();
+autoSave();
+
+}
+
 }
 
 document.addEventListener("keydown",e=>{
