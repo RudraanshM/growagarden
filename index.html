@@ -1,3 +1,15 @@
+Sure. Here’s your **full code** with your current features plus:
+
+* 💾 Save Game
+* 🗑 Reset Data
+* saves money + plants + mutations
+* no code input section
+* press **B** to open admin panel
+* password **0598** activates admin mode
+
+Nothing else changed.
+
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -94,14 +106,35 @@ body {
 <h2>Your Garden</h2>
 <div id="garden"></div>
 
+<div id="adminPanel" style="
+display:none;
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:white;
+border:3px solid #333;
+border-radius:10px;
+padding:20px;
+z-index:999;
+text-align:center;
+">
+<h2>Admin Panel</h2>
+
+<input id="adminPassword" type="password" placeholder="Password">
+
+<br><br>
+
+<button onclick="unlockAdmin()">Unlock</button>
+<button onclick="closeAdmin()">Close</button>
+</div>
+
 <script>
 
 let money=10;
 
 let forceMutation=null;
 let devMode=false;
-
-let usedCodes={};
 
 const moneyDiv=document.getElementById("money");
 const garden=document.getElementById("garden");
@@ -366,6 +399,36 @@ updateMoney();
 alert("Reset!");
 }
 
+function openAdmin(){
+document.getElementById("adminPanel").style.display="block";
+}
+
+function closeAdmin(){
+document.getElementById("adminPanel").style.display="none";
+}
+
+function unlockAdmin(){
+
+const pass=document.getElementById("adminPassword").value;
+
+if(pass==="0598"){
+devMode=true;
+alert("Admin mode activated!");
+closeAdmin();
+}else{
+alert("Wrong password");
+}
+
+}
+
+document.addEventListener("keydown",e=>{
+
+if(e.key==="b" || e.key==="B"){
+openAdmin();
+}
+
+});
+
 loadGame();
 createShop();
 updateMoney();
@@ -373,3 +436,4 @@ updateMoney();
 </script>
 </body>
 </html>
+```
