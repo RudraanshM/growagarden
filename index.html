@@ -114,8 +114,7 @@ text-align:center;
 
 <div id="adminTools" style="display:none;margin-top:12px;">
 
-<input
-id="adminCommand"
+<input id="adminCommand"
 placeholder="/spawn(carrot)(gold)"
 style="width:220px;">
 
@@ -135,9 +134,10 @@ style="width:220px;">
 <script>
 
 let money=10;
-
-let forceMutation=null;
 let devMode=false;
+
+/* income multiplier stored INSIDE money object wrapper */
+let income = { mult: 1 };
 
 const moneyDiv=document.getElementById("money");
 const garden=document.getElementById("garden");
@@ -145,8 +145,7 @@ const garden=document.getElementById("garden");
 function formatNumber(n){
 
 const units=[
-"",
-"K","M","B","T",
+"","K","M","B","T",
 "Qa","Qi","Sx","Sp","Oc","No",
 "Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Od","Nd",
 "Vg","Uvg","Dvg","Tvg","Qavg","Qivg","Sxvg","Spvg","Ocvg","Novg"
@@ -245,10 +244,12 @@ const btn=document.createElement("button");
 btn.textContent="Harvest";
 
 btn.onclick=()=>{
-money+=p.gain*mut.m;
+
+money += p.gain * mut.m * income.mult;
 updateMoney();
 box.remove();
 autoSave();
+
 };
 
 box.appendChild(btn);
@@ -258,17 +259,21 @@ box.appendChild(btn);
 let t=5;
 cd.textContent="Harvest in "+t+"s";
 
-setInterval(()=>{
+const interval=setInterval(()=>{
+
 t--;
 cd.textContent="Harvest in "+t+"s";
 
 if(t<=0){
-money+=p.gain*mut.m;
+money += p.gain * mut.m * income.mult;
 updateMoney();
 autoSave();
 t=5;
 }
+
 },1000);
+
+box.dataset.interval=interval;
 
 }
 
@@ -340,16 +345,13 @@ function loadGame(){
 const savedMoney=localStorage.getItem("gardenMoney");
 const savedPlants=localStorage.getItem("gardenPlants");
 
-if(savedMoney){
-money=Number(savedMoney);
-}
+if(savedMoney) money=Number(savedMoney);
 
 if(savedPlants){
 
 JSON.parse(savedPlants).forEach(item=>{
 
 const p=plants.find(x=>x.name===item.name);
-
 if(!p) return;
 
 let mut={m:1,c:item.mutation};
@@ -404,11 +406,7 @@ const pass=document.getElementById("adminPassword").value;
 if(pass==="0598"){
 
 devMode=true;
-
-document.getElementById(
-"adminTools"
-).style.display="block";
-
+document.getElementById("adminTools").style.display="block";
 alert("Admin mode activated!");
 
 }else{
@@ -421,41 +419,19 @@ function runAdminCommand(){
 
 if(!devMode) return;
 
-const cmd=
-document.getElementById(
-"adminCommand"
-).value.trim();
+const cmd=document.getElementById("adminCommand").value.trim();
 
+/* SPAWN */
 if(cmd.startsWith("/spawn(")){
 
-const matches=
-cmd.match(/\/spawn\((.*?)\)\((.*?)\)/);
-
+const matches=cmd.match(/\/spawn\((.*?)\)\((.*?)\)/);
 if(!matches) return;
 
-const plantName=
-matches[1]
-.trim()
-.toLowerCase();
+const plantName=matches[1].trim().toLowerCase();
+const mutation=matches[2].trim().toLowerCase();
 
-const mutation=
-matches[2]
-.trim()
-.toLowerCase();
-
-const p=
-plants.find(
-x=>
-x.name
-.toLowerCase()
-.replaceAll(" ","")
-===plantName
-);
-
-if(!p){
-alert("Plant not found");
-return;
-}
+const p=plants.find(x=>x.name.toLowerCase().replaceAll(" ","")===plantName);
+if(!p) return alert("Plant not found");
 
 let mut={m:1,c:""};
 
@@ -467,23 +443,18 @@ if(mutation==="admin") mut={m:1000000,c:"admin"};
 if(mutation==="rickroll") mut={m:1e100,c:"rickroll"};
 
 addToGarden(p,mut);
-
 autoSave();
 
 }
 
-/* ✅ ADDED COMMAND */
+/* GIVE MONEY */
 else if(cmd.startsWith("/givemoney(")){
 
 const match=cmd.match(/\/givemoney\((.*?)\)/);
 if(!match) return;
 
 let amount=Number(match[1]);
-
-if(isNaN(amount)){
-alert("Invalid number");
-return;
-}
+if(isNaN(amount)) return alert("Invalid number");
 
 money+=amount;
 updateMoney();
@@ -491,14 +462,71 @@ autoSave();
 
 }
 
+/* MUTATE ALL */
+else if(cmd.startsWith("/mutateall(")){
+
+const match=cmd.match(/\/mutateall\((.*?)\)/);
+if(!match) return;
+
+const mutation=match[1].trim().toLowerCase();
+
+let mut={m:1,c:""};
+
+if(mutation==="silver") mut={m:5,c:"silver"};
+if(mutation==="gold") mut={m:20,c:"gold"};
+if(mutation==="rainbow") mut={m:50,c:"rainbow"};
+if(mutation==="disco") mut={m:125,c:"disco"};
+if(mutation==="admin") mut={m:1000000,c:"admin"};
+if(mutation==="rickroll") mut={m:1e100,c:"rickroll"};
+
+document.querySelectorAll(".plant").forEach(box=>{
+  const title=box.querySelector("b");
+  title.classList.remove("silver","gold","rainbow","disco","admin","rickroll");
+  if(mut.c) title.classList.add(mut.c);
+});
+
+autoSave();
+
+}
+
+/* INCOME MULTIPLIER */
+else if(cmd.startsWith("/incomemultiplier(")){
+
+const match=cmd.match(/\/incomemultiplier\((.*?)\)/);
+if(!match) return;
+
+let value=Number(match[1]);
+
+if(isNaN(value) || value<=0){
+alert("Invalid multiplier");
+return;
+}
+
+income.mult=value;
+alert("Income multiplier set to x"+value);
+autoSave();
+
+}
+
+/* DELETE ALL PLANTS */
+else if(cmd.startsWith("/deleteall")){
+
+document.querySelectorAll(".plant").forEach(box=>{
+  clearInterval(box.dataset.interval);
+  box.remove();
+});
+
+autoSave();
+alert("All plants deleted!");
+
+}
+
 }
 
 document.addEventListener("keydown",e=>{
-
 if(e.key==="b" || e.key==="B"){
 openAdmin();
 }
-
 });
 
 loadGame();
