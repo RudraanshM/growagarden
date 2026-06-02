@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -108,14 +107,29 @@ padding:20px;
 z-index:999;
 text-align:center;
 ">
+
 <h2>Admin Panel</h2>
 
 <input id="adminPassword" type="password" placeholder="Password">
+
+<div id="adminTools" style="display:none;margin-top:12px;">
+
+<input
+id="adminCommand"
+placeholder="/spawn(carrot)(gold)"
+style="width:220px;">
+
+<br><br>
+
+<button onclick="runAdminCommand()">Run</button>
+
+</div>
 
 <br><br>
 
 <button onclick="unlockAdmin()">Unlock</button>
 <button onclick="closeAdmin()">Close</button>
+
 </div>
 
 <script>
@@ -195,19 +209,6 @@ moneyDiv.textContent="Money: "+formatNumber(money);
 }
 
 function getMutation(){
-
-if(forceMutation){
-let map={
-silver:{m:5,c:"silver"},
-gold:{m:20,c:"gold"},
-rainbow:{m:50,c:"rainbow"},
-disco:{m:125,c:"disco"},
-admin:{m:1000000,c:"admin"},
-rickroll:{m:1e100,c:"rickroll"}
-};
-return map[forceMutation];
-}
-
 let r=Math.random();
 if(r<0.000001) return {m:125,c:"disco"};
 if(r<0.001) return {m:50,c:"rainbow"};
@@ -351,7 +352,7 @@ const p=plants.find(x=>x.name===item.name);
 
 if(!p) return;
 
-let mut={m:1,c:""};
+let mut={m:1,c:item.mutation};
 
 if(item.mutation==="silver") mut={m:5,c:"silver"};
 if(item.mutation==="gold") mut={m:20,c:"gold"};
@@ -401,11 +402,74 @@ function unlockAdmin(){
 const pass=document.getElementById("adminPassword").value;
 
 if(pass==="0598"){
+
 devMode=true;
+
+document.getElementById(
+"adminTools"
+).style.display="block";
+
 alert("Admin mode activated!");
-closeAdmin();
+
 }else{
 alert("Wrong password");
+}
+
+}
+
+function runAdminCommand(){
+
+if(!devMode) return;
+
+const cmd=
+document.getElementById(
+"adminCommand"
+).value.trim();
+
+if(cmd.startsWith("/spawn(")){
+
+const matches=
+cmd.match(/\/spawn\((.*?)\)\((.*?)\)/);
+
+if(!matches) return;
+
+const plantName=
+matches[1]
+.trim()
+.toLowerCase();
+
+const mutation=
+matches[2]
+.trim()
+.toLowerCase();
+
+const p=
+plants.find(
+x=>
+x.name
+.toLowerCase()
+.replaceAll(" ","")
+===plantName
+);
+
+if(!p){
+alert("Plant not found");
+return;
+}
+
+let mut={m:1,c:""};
+
+if(mutation==="silver") mut={m:5,c:"silver"};
+if(mutation==="gold") mut={m:20,c:"gold"};
+if(mutation==="rainbow") mut={m:50,c:"rainbow"};
+if(mutation==="disco") mut={m:125,c:"disco"};
+if(mutation==="admin") mut={m:1000000,c:"admin"};
+if(mutation==="rickroll") mut={m:1e100,c:"rickroll"};
+
+addToGarden(p,mut);
+
+autoSave();
+
 }
 
 }
@@ -425,4 +489,3 @@ updateMoney();
 </script>
 </body>
 </html>
-```
