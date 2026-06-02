@@ -94,10 +94,6 @@ body {
 <h2>Your Garden</h2>
 <div id="garden"></div>
 
-<h2>Enter Code</h2>
-<input id="codeInput">
-<button onclick="checkCode()">Submit</button>
-
 <script>
 
 let money=10;
@@ -281,34 +277,6 @@ shop.appendChild(d);
 
 });
 
-}
-
-function checkCode(){
-
-const c=document.getElementById("codeInput").value.trim().toLowerCase();
-
-if(c==="cubiksrubik"){
-addToGarden(plants.find(p=>p.name==="Rubiks Cube Blossom"));
-}
-
-if(c==="silver0598") forceMutation="silver";
-if(c==="gold0598") forceMutation="gold";
-if(c==="rainbow0598") forceMutation="rainbow";
-if(c==="disco0598") forceMutation="disco";
-
-if(c==="dev0598"){
-devMode=true;
-}
-
-if(c==="rickroll0598"){
-addToGarden(plants.find(p=>p.name==="Rickroll Berry"));
-}
-
-if(c==="rickroll0598pro"){
-addToGarden(plants.find(p=>p.name==="Rickroll Berry"),{m:1e100,c:"rickroll"});
-}
-
-autoSave();
 }
 
 function getPlantData(){
