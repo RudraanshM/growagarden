@@ -105,10 +105,50 @@ body {
   z-index:9998;
   pointer-events:none;
 }
+
+/* 🎉 PLANT PARTY STYLES */
+#partyBanner{
+  display:none;
+  position:fixed;
+  top:0; left:0; right:0;
+  padding:12px;
+  text-align:center;
+  font-size:22px;
+  font-weight:bold;
+  z-index:10000;
+  background:linear-gradient(90deg,#ff0080,#ff8c00,#ffe600,#00ff80,#00c8ff,#8000ff);
+  background-size:400%;
+  animation:partyBannerAnim 1s linear infinite;
+  color:white;
+  text-shadow:0 0 8px #000, 0 0 16px #fff;
+  letter-spacing:2px;
+}
+
+@keyframes partyBannerAnim{
+  0%{background-position:0%}
+  100%{background-position:100%}
+}
+
+@keyframes bodyFlash{
+  0%  {background:#ff0080}
+  14% {background:#ff8c00}
+  28% {background:#ffe600}
+  42% {background:#00ff80}
+  57% {background:#00c8ff}
+  71% {background:#8000ff}
+  85% {background:#ff0080}
+  100%{background:#ff8c00}
+}
+
+body.party-mode{
+  animation:bodyFlash 0.5s linear infinite;
+}
 </style>
 </head>
 
 <body>
+<div id="partyBanner">🎉 PLANT PARTY! <span id="partyCountdown">60</span>s 🎉</div>
+
 <h1>🌱 Grow a Garden</h1>
 <div id="money"></div>
 
@@ -165,9 +205,52 @@ let devMode=false;
 let income = { mult: 1 };
 
 let carrotEventActive = false;
+let plantPartyActive = false;
 
 const moneyDiv=document.getElementById("money");
 const garden=document.getElementById("garden");
+
+/* =====================
+   PARTY NAME MAP
+===================== */
+const partyNames = {
+  "Carrot":           "Dancing Carrot",
+  "Strawberry":       "Disco Strawberry",
+  "Blueberry":        "Boogie Blueberry",
+  "Buttercup":        "Funky Buttercup",
+  "Tomato":           "Turnt Tomato",
+  "Corn":             "Rave Corn",
+  "Daffodil":         "Dazzle Daffodil",
+  "Watermelon":       "Wobble Watermelon",
+  "Pumpkin":          "Party Pumpkin",
+  "Apple":            "DJ Apple",
+  "Bamboo":           "Banging Bamboo",
+  "Coconut":          "Clubbing Coconut",
+  "Cactus":           "Cactus Shuffler",
+  "Dragonfruit":      "Dragon Dancer",
+  "Mango":            "Mango Mambo",
+  "Candy Blossom":    "Candy Raver",
+  "Mushroom":         "Mushroom Mosh",
+  "Grape":            "Groovy Grape",
+  "Pepper":           "Pepper Popper",
+  "Cacao":            "Cacao Crunk",
+  "Sunflower":        "Sunflower Spin",
+  "Beanstalk":        "Beanstalk Breakdance",
+  "Sugar Apple":      "Sugar Rush Apple",
+  "Burning Bud":      "Blazing Bud",
+  "Ember Lilly":      "Electric Ember Lilly",
+  "Giant Pinecone":   "Giant Disco Pinecone",
+  "Elder Strawberry": "Elder Rave Strawberry",
+  "Romanesco":        "Romanesco Rollercoaster",
+  "Crimson Thorn":    "Crimson Thumper",
+  "Zebrazincle":      "Zap Zebrazincle",
+  "Octobloom":        "Octo-Boogie",
+  "Beast Buttercup":  "Beast Mode Buttercup",
+  "Alien Apple":      "Alien Rave Apple",
+  "Rubiks Cube Blossom":"Rubiks Rave Blossom",
+  "Rickroll Berry":   "Rick-n-Roll Berry",
+  "Mutant Carrot 🧬": "Mutant Carrot DJ 🧬"
+};
 
 function formatNumber(n){
 
@@ -250,32 +333,24 @@ function startCarrotEvent(){
 if(carrotEventActive) return;
 carrotEventActive=true;
 
-/* 1. follower carrot */
 const follower=document.createElement("div");
 follower.className="carrotFollower";
 follower.textContent="🥕 go carrots";
 document.body.appendChild(follower);
 window.carrotFollower=follower;
 
-/* remove after 5 sec */
 setTimeout(()=>{
 follower.remove();
 window.carrotFollower=null;
 
-/* 2. flying carrots chaos */
 for(let i=0;i<1000;i++){
 spawnFlyingCarrot();
 }
 
-/* end chaos after 30 sec */
 setTimeout(()=>{
 document.querySelectorAll(".flyingCarrot").forEach(c=>c.remove());
-
-/* 3. mutant carrot income */
 spawnMutantCarrot();
-
 carrotEventActive=false;
-
 },30000);
 
 },5000);
@@ -298,13 +373,10 @@ let dy=(Math.random()-0.5)*10;
 let t=setInterval(()=>{
 let x=parseFloat(c.style.left);
 let y=parseFloat(c.style.top);
-
 x+=dx;
 y+=dy;
-
 c.style.left=x+"px";
 c.style.top=y+"px";
-
 },30);
 
 setTimeout(()=>{
@@ -324,13 +396,70 @@ box.appendChild(title);
 
 garden.appendChild(box);
 
-/* 21 decillion/sec */
 setInterval(()=>{
 money += 2.1e34;
 updateMoney();
 autoSave();
 },1000);
 
+}
+
+/* =========================
+   🎉 PLANT PARTY SYSTEM
+========================= */
+
+function startPlantParty(){
+
+if(plantPartyActive) return;
+plantPartyActive=true;
+
+/* 1. Rename all plants permanently */
+document.querySelectorAll(".plant").forEach(box=>{
+  const title=box.querySelector("b");
+  if(!title) return;
+  const current=title.textContent;
+  const partyName=partyNames[current];
+  if(partyName) title.textContent=partyName;
+});
+
+/* 2. Flash screen */
+document.body.classList.add("party-mode");
+
+/* 3. Show banner */
+const banner=document.getElementById("partyBanner");
+banner.style.display="block";
+let timeLeft=60;
+document.getElementById("partyCountdown").textContent=timeLeft;
+
+const countdownTick=setInterval(()=>{
+  timeLeft--;
+  document.getElementById("partyCountdown").textContent=timeLeft;
+  if(timeLeft<=0) clearInterval(countdownTick);
+},1000);
+
+/* 4. Disco mutation to random plant every 2s */
+const discoInterval=setInterval(()=>{
+  const allPlants=document.querySelectorAll(".plant");
+  if(allPlants.length===0) return;
+  const pick=allPlants[Math.floor(Math.random()*allPlants.length)];
+  const title=pick.querySelector("b");
+  if(!title) return;
+  title.classList.remove("silver","gold","rainbow","admin","rickroll");
+  title.classList.add("disco");
+  /* Store the new multiplier on the box so harvesting uses it */
+  pick.dataset.partyDisco="1";
+},2000);
+
+/* 5. End party after 60s */
+setTimeout(()=>{
+  clearInterval(discoInterval);
+  document.body.classList.remove("party-mode");
+  banner.style.display="none";
+  plantPartyActive=false;
+  autoSave();
+},60000);
+
+autoSave();
 }
 
 /* =========================
@@ -352,7 +481,10 @@ const box=document.createElement("div");
 box.className="plant";
 
 const title=document.createElement("b");
-title.textContent=p.name;
+
+/* If party is active, use party name */
+const displayName=(plantPartyActive && partyNames[p.name]) ? partyNames[p.name] : p.name;
+title.textContent=displayName;
 
 const mut=forceMut?forceMut:getMutation();
 
@@ -374,12 +506,10 @@ const btn=document.createElement("button");
 btn.textContent="Harvest";
 
 btn.onclick=()=>{
-
 money += p.gain * mut.m * income.mult;
 updateMoney();
 box.remove();
 autoSave();
-
 };
 
 box.appendChild(btn);
@@ -447,7 +577,11 @@ if(!devMode) return;
 
 const cmd=document.getElementById("adminCommand").value.trim();
 
-/* existing commands ... (unchanged above) */
+/* PLANT PARTY */
+if(cmd.startsWith("/plantparty")){
+startPlantParty();
+return;
+}
 
 /* CARROTS EVENT */
 if(cmd.startsWith("/carrots")){
@@ -582,13 +716,33 @@ alert("Wrong password");
 
 /* SAVE / LOAD */
 
+/* Maps CSS class → income multiplier, kept in sync with getMutation + spawn logic */
+const mutMultipliers={
+  "":1,
+  "silver":5,
+  "gold":20,
+  "rainbow":50,
+  "disco":125,
+  "admin":1000000,
+  "rickroll":1e100
+};
+
+function getMutClass(classList){
+  for(const c of ["rickroll","admin","disco","rainbow","gold","silver"]){
+    if(classList.contains(c)) return c;
+  }
+  return "";
+}
+
 function getPlantData(){
 const plantData=[];
 document.querySelectorAll(".plant").forEach(box=>{
 const title=box.querySelector("b");
+const mutClass=getMutClass(title.classList);
 plantData.push({
 name:title.textContent,
-mutation:[...title.classList].join(",")
+mutClass:mutClass,
+mutMult:mutMultipliers[mutClass]??1
 });
 });
 return plantData;
@@ -616,10 +770,31 @@ if(savedPlants){
 
 JSON.parse(savedPlants).forEach(item=>{
 
-const p=plants.find(x=>x.name===item.name);
+/* Try exact name match first (handles already-renamed party names) */
+let p=plants.find(x=>x.name===item.name);
+
+/* If not found, try matching against party names */
+if(!p){
+  const originalName=Object.keys(partyNames).find(k=>partyNames[k]===item.name);
+  if(originalName) p=plants.find(x=>x.name===originalName);
+}
+
 if(!p) return;
 
-addToGarden(p);
+/* Build forceMut from saved data so the multiplier closure is correct */
+const savedClass = item.mutClass ?? "";
+const savedMult  = item.mutMult  ?? (mutMultipliers[savedClass] ?? 1);
+const forceMut   = { m: savedMult, c: savedClass };
+
+addToGarden(p, forceMut);
+
+/* Restore the exact saved name (party names persist after rename) */
+const boxes=document.querySelectorAll(".plant");
+const lastBox=boxes[boxes.length-1];
+if(lastBox){
+  const title=lastBox.querySelector("b");
+  if(title) title.textContent=item.name;
+}
 
 });
 
