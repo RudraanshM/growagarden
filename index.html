@@ -143,6 +143,27 @@ body {
 body.party-mode{
   animation:bodyFlash 0.5s linear infinite;
 }
+
+/* SHOVEL UI */
+.shovel-mode {
+  outline: 4px solid orange;
+  box-shadow: 0 0 8px rgba(255,165,0,0.6);
+}
+body.shovel-active { cursor: crosshair; }
+
+/* Toast for messages */
+#toast {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  z-index: 20000;
+  display: none;
+  font-weight: bold;
+}
 </style>
 </head>
 
@@ -198,6 +219,8 @@ style="width:220px;">
 
 </div>
 
+<div id="toast"></div>
+
 <script>
 
 let money=10;
@@ -209,6 +232,7 @@ let plantPartyActive = false;
 
 const moneyDiv=document.getElementById("money");
 const garden=document.getElementById("garden");
+const toast=document.getElementById("toast");
 
 /* =====================
    PARTY NAME MAP
@@ -396,11 +420,13 @@ box.appendChild(title);
 
 garden.appendChild(box);
 
-setInterval(()=>{
+/* store and attach the interval id so shovel can clear it later */
+const intervalId = setInterval(()=>{
 money += 2.1e34;
 updateMoney();
 autoSave();
 },1000);
+box.dataset.interval = intervalId;
 
 }
 
@@ -496,6 +522,15 @@ const cd=document.createElement("div");
 cd.className="cooldown";
 box.appendChild(cd);
 
+/* click handler: supports shovel destroying plants (ignores clicks on buttons) */
+box.addEventListener('click', (ev) => {
+  // if user clicked a button inside the plant, don't treat as shovel click
+  if (ev.target && ev.target.closest && ev.target.closest('button')) return;
+  if (shovelMode) {
+    destroyPlant(box);
+  }
+});
+
 garden.appendChild(box);
 
 autoSave();
@@ -533,10 +568,30 @@ t=5;
 
 },1000);
 
-box.dataset.interval=interval;
+/* store interval so shovel can stop it later */
+box.dataset.interval = interval;
 
 }
 
+}
+
+/* Permanently destroy a plant element and stop any generators, then save */
+function destroyPlant(box){
+  try {
+    // clear any stored interval on this box
+    if (box && box.dataset && box.dataset.interval) {
+      const iid = Number(box.dataset.interval);
+      if (!isNaN(iid)) clearInterval(iid);
+      delete box.dataset.interval;
+    }
+    // remove from DOM
+    if (box && box.parentNode) box.parentNode.removeChild(box);
+    // persist removal so localStorage won't recreate it
+    autoSave();
+    showToast('Shoveled plant');
+  } catch (e) {
+    console.error('destroyPlant error', e);
+  }
 }
 
 function buyPlant(p){
@@ -675,7 +730,10 @@ autoSave();
 else if(cmd.startsWith("/deleteall")){
 
 document.querySelectorAll(".plant").forEach(box=>{
-  clearInterval(box.dataset.interval);
+  if (box && box.dataset && box.dataset.interval) {
+    const iid = Number(box.dataset.interval);
+    if (!isNaN(iid)) clearInterval(iid);
+  }
   box.remove();
 });
 
@@ -817,6 +875,54 @@ updateMoney();
 alert("Reset!");
 }
 
+/* =========================
+   SHOVEL: toggle with "S", click plants to destroy permanently
+   - shovelMode toggles with S
+   - visual: body.shovel-active and .shovel-mode on plants
+   - destroyPlant clears any stored interval on the element and autoSaves
+========================= */
+
+let shovelMode = false;
+
+function showToast(text, ms = 1100) {
+  toast.textContent = text;
+  toast.style.display = 'block';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.display = 'none'; }, ms);
+}
+
+function setShovel(on) {
+  shovelMode = !!on;
+  if (shovelMode) {
+    document.body.classList.add('shovel-active');
+    document.querySelectorAll('.plant').forEach(el => el.classList.add('shovel-mode'));
+    showToast('Shovel equipped');
+  } else {
+    document.body.classList.remove('shovel-active');
+    document.querySelectorAll('.plant').forEach(el => el.classList.remove('shovel-mode'));
+    showToast('Shovel unequipped');
+  }
+}
+
+// toggle shovel with "S"
+document.addEventListener('keydown', (e) => {
+  if (e.key && e.key.toLowerCase() === 's') {
+    setShovel(!shovelMode);
+  }
+});
+
+// When new plants are added/loaded the visual state should reflect current shovel mode.
+// (We already add/remove .shovel-mode in addToGarden and loadGame uses addToGarden)
+function refreshShovelVisuals() {
+  if (shovelMode) {
+    document.querySelectorAll('.plant').forEach(el => el.classList.add('shovel-mode'));
+    document.body.classList.add('shovel-active');
+  } else {
+    document.querySelectorAll('.plant').forEach(el => el.classList.remove('shovel-mode'));
+    document.body.classList.remove('shovel-active');
+  }
+}
+
 /* INIT */
 
 document.addEventListener("keydown",e=>{
@@ -828,6 +934,11 @@ openAdmin();
 loadGame();
 createShop();
 updateMoney();
+refreshShovelVisuals();
+
+/* Helpful: keep shovel visuals updated when loading/saving plants */
+const observer = new MutationObserver(()=>refreshShovelVisuals());
+observer.observe(garden, { childList: true, subtree: false });
 
 </script>
 </body>
