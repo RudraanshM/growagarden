@@ -230,6 +230,9 @@ let income = { mult: 1 };
 let carrotEventActive = false;
 let plantPartyActive = false;
 
+let clueUnlocked = localStorage.getItem("gardenClueUnlocked") === "1";
+let carrotShopClicks = 0;
+
 const moneyDiv=document.getElementById("money");
 const garden=document.getElementById("garden");
 const toast=document.getElementById("toast");
@@ -334,7 +337,8 @@ const plants=[
 {name:"Beast Buttercup",type:"single",buy:500000000000,gain:2707500},
 {name:"Alien Apple",type:"multi",buy:1000000000000,gain:902500},
 {name:"Rubiks Cube Blossom",type:"multi",buy:0,gain:1e15},
-{name:"Rickroll Berry",type:"multi",buy:0,gain:1e100}
+{name:"Rickroll Berry",type:"multi",buy:0,gain:1e100},
+{name:"Clue",type:"clue",buy:0,gain:0}
 ];
 
 function updateMoney(){
@@ -535,6 +539,14 @@ garden.appendChild(box);
 
 autoSave();
 
+if(p.type === "clue"){
+  const btn = document.createElement("button");
+  btn.textContent = "Open";
+  btn.onclick = () => alert("e4 e5 nf3 nc6");
+  box.appendChild(btn);
+  return;
+}
+
 if(p.type==="single"){
 
 const btn=document.createElement("button");
@@ -601,6 +613,10 @@ money-=p.buy;
 updateMoney();
 
 addToGarden(p);
+
+if(p.name === "Daffodil" && clueUnlocked){
+  addToGarden(plants.find(x => x.name === "Clue"), {m:1, c:""});
+}
 }
 
 function createShop(){
@@ -615,6 +631,19 @@ d.className="item";
 d.innerHTML=`<b>${p.name}</b><br>Buy:${formatNumber(p.buy)}<br>Gives:${formatNumber(p.gain)}<br><button>Buy</button>`;
 
 d.querySelector("button").onclick=()=>buyPlant(p);
+
+if(p.name === "Carrot"){
+  d.addEventListener("click", (e) => {
+    if(e.target.closest("button")) return; // Buy button doesn't count
+    if(clueUnlocked) return;
+    carrotShopClicks++;
+    if(carrotShopClicks >= 3){
+      clueUnlocked = true;
+      localStorage.setItem("gardenClueUnlocked", "1");
+      showToast("Something new is growing...");
+    }
+  });
+}
 
 shop.appendChild(d);
 
@@ -866,6 +895,9 @@ if(!confirm("Delete all saved data?")) return;
 
 localStorage.removeItem("gardenMoney");
 localStorage.removeItem("gardenPlants");
+localStorage.removeItem("gardenClueUnlocked");
+clueUnlocked = false;
+carrotShopClicks = 0;
 
 money=10;
 garden.innerHTML="";
