@@ -1,977 +1,1211 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Grow a Garden</title>
 <style>
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
-  font-family: Arial;
-  background:#b7e7a7;
-  padding:20px;
-}
-#money { font-size:20px; margin-bottom:10px; }
-#shop,#garden { display:flex; flex-wrap:wrap; gap:10px; }
-
-.item,.plant {
-  background:white;
-  border:2px solid #333;
-  border-radius:8px;
-  padding:10px;
-  width:190px;
-  text-align:center;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(180deg, #c2f0b2 0%, #9fd88e 100%);
+  color: #1f2d1d;
+  padding: 20px;
+  padding-bottom: 50px;
+  margin: 0;
+  min-height: 100vh;
+  transition: background 0.7s ease, filter 0.2s ease;
+  overflow-x: hidden;
 }
 
-.cooldown { font-size:12px; }
-
-#saveBtn,#resetBtn{
-  margin-bottom:15px;
-  padding:8px 14px;
-  background:#2196f3;
-  color:white;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
+h1 {
+  margin: 6px 0 12px;
+  font-size: 30px;
+  letter-spacing: -0.5px;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.7);
 }
 
-#resetBtn{
-  background:#e53935;
-  margin-left:8px;
+h2 {
+  margin: 22px 0 12px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.silver { color:silver; }
-.gold { color:gold; }
+.hud-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+#money {
+  font-size: 20px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 2px solid #2c3e29;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+.top-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.top-controls button {
+  padding: 9px 14px;
+  color: white;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+  transition: transform 0.12s ease, opacity 0.15s ease;
+  touch-action: manipulation;
+}
+
+.top-controls button:hover {
+  opacity: 0.94;
+}
+
+.top-controls button:active {
+  transform: scale(0.96);
+}
+
+#saveBtn { background: #1e88e5; }
+#tutBtn { background: #2e7d32; }
+#shovelTopBtn { background: #ef6c00; }
+#shovelTopBtn.active-shovel {
+  background: #ffd54f;
+  color: #1a1a1a;
+  border-color: #ef6c00;
+}
+#resetBtn { background: #d32f2f; }
+
+#shop, #garden {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.item, .plant {
+  background: rgba(255, 255, 255, 0.94);
+  border: 2px solid #2c3e29;
+  border-radius: 14px;
+  padding: 12px;
+  width: 196px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.item:hover, .plant:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+.item-name, .plant-title {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.item-stats {
+  font-size: 13px;
+  color: #3b4d38;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.mult-summary {
+  font-size: 12px;
+  font-weight: 800;
+  color: #1b5e20;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 8px;
+  padding: 2px 6px;
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.item button, .plant button {
+  margin-top: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid #2c3e29;
+  border-radius: 8px;
+  background: #e8f5e9;
+  color: #1b2e18;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s ease, transform 0.1s ease;
+  touch-action: manipulation;
+}
+
+.item button:hover, .plant button:hover {
+  background: #c8e6c9;
+}
+
+.item button:active, .plant button:active {
+  transform: scale(0.96);
+}
+
+.cooldown {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  color: #556652;
+}
+
+/* MUTATION BADGES & TEXT STYLES */
+.mut-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.mut-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #263238;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.silver { color: #78909c; }
+.gold { color: #f59e0b; text-shadow: 0 0 4px rgba(245,158,11,0.35); }
 
 .rainbow {
-  background:linear-gradient(90deg,red,orange,yellow,green,blue,purple);
-  background-size:300%;
-  -webkit-background-clip:text;
-  color:transparent;
-  animation:rainbow 3s linear infinite;
+  background: linear-gradient(90deg,#ff1744,#ff9100,#ffea00,#00e676,#2979ff,#d500f9);
+  background-size: 300%;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: rainbow 3s linear infinite;
 }
 
 @keyframes rainbow {
-  0%{background-position:0%}
-  100%{background-position:100%}
+  0% { background-position: 0%; }
+  100% { background-position: 100%; }
 }
 
 .disco {
-  animation:disco 0.5s infinite;
+  animation: disco 0.5s infinite;
 }
 
 @keyframes disco {
-  0%{color:red}
-  20%{color:yellow}
-  40%{color:green}
-  60%{color:blue}
-  80%{color:pink}
-  100%{color:red}
+  0% { color: #ff1744; }
+  25% { color: #ffea00; }
+  50% { color: #00e676; }
+  75% { color: #2979ff; }
+  100% { color: #ff1744; }
 }
 
-.admin{
-  display:inline-block;
-  animation:adminRock 0.15s infinite;
+/* WEATHER MUTATIONS */
+.wet { color: #0288d1; }
+.frozen { color: #00acc1; text-shadow: 0 0 4px rgba(0,172,193,0.4); }
+.shocked { color: #fbc02d; text-shadow: 0 0 6px rgba(251,192,45,0.6); }
+.windstruck { color: #43a047; }
+.sunburnt { color: #e64a19; }
+.celestial { color: #8e24aa; text-shadow: 0 0 6px rgba(142,36,170,0.45); }
+
+/* WEATHER BACKGROUNDS & LIVE VISUAL EFFECTS */
+body.weather-rain { background: linear-gradient(180deg, #607d8b 0%, #455a64 100%); color: #f5f7f8; }
+body.weather-snow { background: linear-gradient(180deg, #e0f7fa 0%, #b2ebf2 100%); }
+body.weather-thunderstorm { background: linear-gradient(180deg, #263238 0%, #102027 100%); color: #eceff1; }
+body.weather-windy { background: linear-gradient(180deg, #a5d6a7 0%, #81c784 100%); }
+body.weather-heatwave { background: linear-gradient(180deg, #ffe082 0%, #ffb74d 100%); }
+body.weather-meteorshower { background: linear-gradient(180deg, #1a237e 0%, #311b92 100%); color: #ede7f6; }
+
+body.weather-rain h1, body.weather-rain h2,
+body.weather-thunderstorm h1, body.weather-thunderstorm h2,
+body.weather-meteorshower h1, body.weather-meteorshower h2 {
+  text-shadow: 0 2px 8px rgba(0,0,0,0.45);
 }
 
-@keyframes adminRock{
-  0%{transform:rotate(-15deg)}
-  50%{transform:rotate(15deg)}
-  100%{transform:rotate(-15deg)}
+#weatherEffectsLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  overflow: hidden;
 }
 
-.rickroll{
-  background:linear-gradient(90deg,pink,cyan,pink);
-  -webkit-background-clip:text;
-  color:transparent;
-  animation:rainbow 1s infinite;
+#lightningFlash {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 210, 0.75);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9005;
+  transition: opacity 0.08s ease;
 }
 
-/* 🥕 CARROT EVENT STYLES */
-.carrotFollower{
-  position:fixed;
-  pointer-events:none;
-  font-size:20px;
-  z-index:9999;
-  animation:pulse 0.3s infinite;
+#heatAura {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(255, 111, 0, 0.22), transparent 70%);
+  pointer-events: none;
+  z-index: 8999;
+  animation: heatPulse 2s ease-in-out infinite;
 }
 
-@keyframes pulse{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.3)}
-  100%{transform:scale(1)}
+body.weather-heatwave #heatAura {
+  display: block;
 }
 
-.flyingCarrot{
-  position:fixed;
-  font-size:16px;
-  z-index:9998;
-  pointer-events:none;
+@keyframes heatPulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
 }
 
-/* 🎉 PLANT PARTY STYLES */
-#partyBanner{
-  display:none;
-  position:fixed;
-  top:0; left:0; right:0;
-  padding:12px;
-  text-align:center;
-  font-size:22px;
-  font-weight:bold;
-  z-index:10000;
-  background:linear-gradient(90deg,#ff0080,#ff8c00,#ffe600,#00ff80,#00c8ff,#8000ff);
-  background-size:400%;
-  animation:partyBannerAnim 1s linear infinite;
-  color:white;
-  text-shadow:0 0 8px #000, 0 0 16px #fff;
-  letter-spacing:2px;
+.weather-particle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 18px;
+  z-index: 9001;
 }
 
-@keyframes partyBannerAnim{
-  0%{background-position:0%}
-  100%{background-position:100%}
+.wind-streak {
+  position: fixed;
+  height: 2px;
+  width: 90px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9002;
 }
 
-@keyframes bodyFlash{
-  0%  {background:#ff0080}
-  14% {background:#ff8c00}
-  28% {background:#ffe600}
-  42% {background:#00ff80}
-  57% {background:#00c8ff}
-  71% {background:#8000ff}
-  85% {background:#ff0080}
-  100%{background:#ff8c00}
-}
-
-body.party-mode{
-  animation:bodyFlash 0.5s linear infinite;
+/* WEATHER BANNER */
+#weatherBanner {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  z-index: 9999;
+  background: rgba(18, 28, 42, 0.94);
+  color: #fff;
+  border-bottom: 3px solid #29b6f6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.28);
 }
 
 /* SHOVEL UI */
 .shovel-mode {
-  outline: 4px solid orange;
-  box-shadow: 0 0 8px rgba(255,165,0,0.6);
+  outline: 3px solid #ff9800;
+  box-shadow: 0 0 12px rgba(255, 152, 0, 0.75);
 }
 body.shovel-active { cursor: crosshair; }
 
-/* Toast for messages */
+/* MOBILE-ONLY BOTTOM BAR */
+#mobileBar {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 14px;
+    padding-bottom: 84px;
+  }
+  h1 { font-size: 25px; }
+  #shop, #garden {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .item, .plant {
+    width: 100%;
+    padding: 10px;
+  }
+  #shovelTopBtn {
+    display: none;
+  }
+  #mobileBar {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: #181c19;
+    padding: 10px 12px;
+    justify-content: space-around;
+    gap: 10px;
+    z-index: 15000;
+    border-top: 2px solid #2e3b30;
+    box-shadow: 0 -4px 14px rgba(0,0,0,0.25);
+  }
+  #mobileBar button {
+    flex: 1;
+    padding: 11px 8px;
+    font-size: 14px;
+    font-weight: 800;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    background: #2e3830;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  #mobileBar button.active-shovel {
+    background: #ff9800;
+    color: #111;
+  }
+}
+
+/* LIVE SPOTLIGHT TUTORIAL OVERLAY */
+#spotlightBackdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  z-index: 25000;
+  pointer-events: auto;
+}
+
+.tutorial-highlight {
+  position: relative !important;
+  z-index: 25002 !important;
+  outline: 4px solid #ffeb3b !important;
+  box-shadow: 0 0 0 6px rgba(255, 235, 59, 0.35), 0 0 24px rgba(255, 235, 59, 0.85) !important;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  color: #1f2d1d !important;
+}
+
+#tutorialTooltip {
+  display: none;
+  position: fixed;
+  z-index: 25005;
+  background: #ffffff;
+  color: #1f2d1d;
+  border: 3px solid #2e7d32;
+  border-radius: 14px;
+  padding: 16px;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+}
+
+#tutorialTooltip h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  color: #1b5e20;
+}
+
+#tutorialTooltip p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.tut-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.tut-progress {
+  font-size: 12px;
+  font-weight: 700;
+  color: #555;
+}
+
+.tut-actions button {
+  padding: 7px 11px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+#tutPrevBtn { background: #e0e0e0; color: #222; }
+#tutNextBtn { background: #2e7d32; color: #fff; }
+#tutSkipBtn { background: #ef5350; color: #fff; }
+
+/* Toast */
 #toast {
   position: fixed;
-  top: 12px;
-  right: 12px;
-  background: rgba(0,0,0,0.85);
+  top: 56px;
+  right: 14px;
+  background: rgba(20, 28, 22, 0.92);
   color: #fff;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.18);
   z-index: 20000;
   display: none;
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 13px;
+  max-width: 82vw;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 </style>
 </head>
 
 <body>
-<div id="partyBanner">🎉 PLANT PARTY! <span id="partyCountdown">60</span>s 🎉</div>
+<div id="weatherBanner">🌦️ <span id="weatherText"></span> (<span id="weatherCountdown">60</span>s)</div>
+<div id="heatAura"></div>
+<div id="lightningFlash"></div>
+<div id="weatherEffectsLayer"></div>
 
 <h1>🌱 Grow a Garden</h1>
-<div id="money"></div>
 
-<button id="saveBtn" onclick="saveGame()">💾 Save Game</button>
-<button id="resetBtn" onclick="resetGame()">🗑 Reset Data</button>
-
-<h2>Shop</h2>
-<div id="shop"></div>
-
-<h2>Your Garden</h2>
-<div id="garden"></div>
-
-<div id="adminPanel" style="
-display:none;
-position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-background:white;
-border:3px solid #333;
-border-radius:10px;
-padding:20px;
-z-index:999;
-text-align:center;
-">
-
-<h2>Admin Panel</h2>
-
-<input id="adminPassword" type="password" placeholder="Password">
-
-<div id="adminTools" style="display:none;margin-top:12px;">
-
-<input id="adminCommand"
-placeholder="/spawn(carrot)(gold)"
-style="width:220px;">
-
-<br><br>
-
-<button onclick="runAdminCommand()">Run</button>
-
+<div class="hud-row">
+  <div id="money">Money: 10</div>
+  <div class="top-controls" id="topControls">
+    <button id="saveBtn" onclick="saveGame()">💾 Save</button>
+    <button id="shovelTopBtn" onclick="setShovel(!shovelMode)">🪓 Shovel: OFF</button>
+    <button id="tutBtn" onclick="startLiveTutorial()">🎯 Live Guide</button>
+    <button id="resetBtn" onclick="resetGame()">🗑 Reset</button>
+  </div>
 </div>
 
-<br><br>
+<h2>🛒 Shop</h2>
+<div id="shop"></div>
 
-<button onclick="unlockAdmin()">Unlock</button>
-<button onclick="closeAdmin()">Close</button>
+<h2>🌿 Your Garden</h2>
+<div id="garden"></div>
 
+<!-- MOBILE-ONLY BOTTOM BAR -->
+<div id="mobileBar">
+  <button id="mobileShovelBtn" onclick="setShovel(!shovelMode)">🪓 Shovel: OFF</button>
+  <button onclick="startLiveTutorial()">🎯 Guide</button>
+</div>
+
+<!-- LIVE SPOTLIGHT TUTORIAL -->
+<div id="spotlightBackdrop"></div>
+<div id="tutorialTooltip">
+  <h3 id="tutTitle"></h3>
+  <p id="tutDesc"></p>
+  <div class="tut-footer">
+    <span class="tut-progress" id="tutStepCount"></span>
+    <div class="tut-actions">
+      <button id="tutPrevBtn" onclick="stepTutorial(-1)">Back</button>
+      <button id="tutNextBtn" onclick="stepTutorial(1)">Next</button>
+      <button id="tutSkipBtn" onclick="endLiveTutorial()">Done</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
 
 <script>
+let money = 10;
+let activeWeather = null;
+let weatherEffectInterval = null;
+let shovelMode = false;
 
-let money=10;
-let devMode=false;
-let income = { mult: 1 };
-
-let carrotEventActive = false;
-let plantPartyActive = false;
-
-let clueUnlocked = localStorage.getItem("gardenClueUnlocked") === "1";
-let carrotShopClicks = 0;
-
-const moneyDiv=document.getElementById("money");
-const garden=document.getElementById("garden");
-const toast=document.getElementById("toast");
+const moneyDiv = document.getElementById("money");
+const shopDiv = document.getElementById("shop");
+const gardenDiv = document.getElementById("garden");
+const toastDiv = document.getElementById("toast");
 
 /* =====================
-   PARTY NAME MAP
+   ADDITIVE MUTATIONS
+   Base multiplier = 1
+   Each mutation adds its bonus!
 ===================== */
-const partyNames = {
-  "Carrot":           "Dancing Carrot",
-  "Strawberry":       "Disco Strawberry",
-  "Blueberry":        "Boogie Blueberry",
-  "Buttercup":        "Funky Buttercup",
-  "Tomato":           "Turnt Tomato",
-  "Corn":             "Rave Corn",
-  "Daffodil":         "Dazzle Daffodil",
-  "Watermelon":       "Wobble Watermelon",
-  "Pumpkin":          "Party Pumpkin",
-  "Apple":            "DJ Apple",
-  "Bamboo":           "Banging Bamboo",
-  "Coconut":          "Clubbing Coconut",
-  "Cactus":           "Cactus Shuffler",
-  "Dragonfruit":      "Dragon Dancer",
-  "Mango":            "Mango Mambo",
-  "Candy Blossom":    "Candy Raver",
-  "Mushroom":         "Mushroom Mosh",
-  "Grape":            "Groovy Grape",
-  "Pepper":           "Pepper Popper",
-  "Cacao":            "Cacao Crunk",
-  "Sunflower":        "Sunflower Spin",
-  "Beanstalk":        "Beanstalk Breakdance",
-  "Sugar Apple":      "Sugar Rush Apple",
-  "Burning Bud":      "Blazing Bud",
-  "Ember Lilly":      "Electric Ember Lilly",
-  "Giant Pinecone":   "Giant Disco Pinecone",
-  "Elder Strawberry": "Elder Rave Strawberry",
-  "Romanesco":        "Romanesco Rollercoaster",
-  "Crimson Thorn":    "Crimson Thumper",
-  "Zebrazincle":      "Zap Zebrazincle",
-  "Octobloom":        "Octo-Boogie",
-  "Beast Buttercup":  "Beast Mode Buttercup",
-  "Alien Apple":      "Alien Rave Apple",
-  "Rubiks Cube Blossom":"Rubiks Rave Blossom",
-  "Rickroll Berry":   "Rick-n-Roll Berry",
-  "Mutant Carrot 🧬": "Mutant Carrot DJ 🧬"
+const mutations = {
+  // Base / rare mutations
+  silver:     { label: "Silver",     bonus: 4,   cls: "silver" },     // +4 -> 5x total
+  gold:       { label: "Gold",       bonus: 19,  cls: "gold" },       // +19 -> 20x total
+  rainbow:    { label: "Rainbow",    bonus: 49,  cls: "rainbow" },    // +49 -> 50x total
+  disco:      { label: "Disco",      bonus: 124, cls: "disco" },      // +124 -> 125x total
+
+  // Weather mutations
+  wet:        { label: "Wet",        bonus: 1,   cls: "wet" },        // +1 -> 2x total
+  windstruck: { label: "Windstruck", bonus: 2,   cls: "windstruck" }, // +2 -> 3x total
+  sunburnt:   { label: "Sunburnt",   bonus: 4,   cls: "sunburnt" },   // +4 -> 5x total
+  frozen:     { label: "Frozen",     bonus: 9,   cls: "frozen" },     // +9 -> 10x total
+  shocked:    { label: "Shocked",    bonus: 99,  cls: "shocked" },    // +99 -> 100x total
+  celestial:  { label: "Celestial",  bonus: 119, cls: "celestial" }   // +119 -> 120x total
 };
 
-function formatNumber(n){
-
-const units=[
-"","K","M","B","T",
-"Qa","Qi","Sx","Sp","Oc","No",
-"Dc","Ud","Dd","Td","Qad","Qid","Sxd","Spd","Od","Nd",
-"Vg","Uvg","Dvg","Tvg","Qavg","Qivg","Sxvg","Spvg","Ocvg","Novg"
-];
-
-if(n<1000) return Math.floor(n);
-
-let tier=Math.floor(Math.log10(n)/3);
-
-if(tier>=units.length){
-return n.toExponential(2);
-}
-
-let scale=Math.pow(10,tier*3);
-let scaled=n/scale;
-
-return scaled.toFixed(2)+" "+units[tier];
-}
-
-const plants=[
-{name:"Carrot",type:"single",buy:10,gain:18},
-{name:"Strawberry",type:"multi",buy:50,gain:14},
-{name:"Blueberry",type:"multi",buy:400,gain:18},
-{name:"Buttercup",type:"single",buy:600,gain:542},
-{name:"Tomato",type:"multi",buy:800,gain:27},
-{name:"Corn",type:"multi",buy:1300,gain:36},
-{name:"Daffodil",type:"single",buy:1000,gain:1000},
-{name:"Watermelon",type:"single",buy:2500,gain:2500},
-{name:"Pumpkin",type:"single",buy:3000,gain:3000},
-{name:"Apple",type:"multi",buy:3250,gain:248},
-{name:"Bamboo",type:"single",buy:4000,gain:3999},
-{name:"Coconut",type:"multi",buy:6000,gain:361},
-{name:"Cactus",type:"multi",buy:15000,gain:3068},
-{name:"Dragonfruit",type:"multi",buy:50000,gain:4287},
-{name:"Mango",type:"multi",buy:100000,gain:5886},
-{name:"Candy Blossom",type:"multi",buy:0,gain:90250},
-{name:"Mushroom",type:"single",buy:150000,gain:136278},
-{name:"Grape",type:"multi",buy:850000,gain:7085},
-{name:"Pepper",type:"multi",buy:1000000,gain:7220},
-{name:"Cacao",type:"multi",buy:2500000,gain:10830},
-{name:"Sunflower",type:"multi",buy:5555555,gain:50138},
-{name:"Beanstalk",type:"multi",buy:10000000,gain:25270},
-{name:"Sugar Apple",type:"multi",buy:25000000,gain:43320},
-{name:"Burning Bud",type:"multi",buy:40000000,gain:63175},
-{name:"Ember Lilly",type:"multi",buy:50000000,gain:60166},
-{name:"Giant Pinecone",type:"multi",buy:55000000,gain:64980},
-{name:"Elder Strawberry",type:"multi",buy:70000000,gain:81225},
-{name:"Romanesco",type:"multi",buy:88000000,gain:149815},
-{name:"Crimson Thorn",type:"multi",buy:10000000000,gain:189525},
-{name:"Zebrazincle",type:"multi",buy:21000000000,gain:234650},
-{name:"Octobloom",type:"multi",buy:33000000000,gain:260721},
-{name:"Beast Buttercup",type:"single",buy:500000000000,gain:2707500},
-{name:"Alien Apple",type:"multi",buy:1000000000000,gain:902500},
-{name:"Rubiks Cube Blossom",type:"multi",buy:0,gain:1e15},
-{name:"Rickroll Berry",type:"multi",buy:0,gain:1e100},
-{name:"Clue",type:"clue",buy:0,gain:0}
-];
-
-function updateMoney(){
-moneyDiv.textContent="Money: "+formatNumber(money);
-}
-
-/* =========================
-   🥕 CARROT EVENT SYSTEM
-========================= */
-
-document.addEventListener("mousemove",(e)=>{
-if(window.carrotFollower){
-window.carrotFollower.style.left=e.clientX+"px";
-window.carrotFollower.style.top=e.clientY+"px";
-}
-});
-
-function startCarrotEvent(){
-
-if(carrotEventActive) return;
-carrotEventActive=true;
-
-const follower=document.createElement("div");
-follower.className="carrotFollower";
-follower.textContent="🥕 go carrots";
-document.body.appendChild(follower);
-window.carrotFollower=follower;
-
-setTimeout(()=>{
-follower.remove();
-window.carrotFollower=null;
-
-for(let i=0;i<1000;i++){
-spawnFlyingCarrot();
-}
-
-setTimeout(()=>{
-document.querySelectorAll(".flyingCarrot").forEach(c=>c.remove());
-spawnMutantCarrot();
-carrotEventActive=false;
-},30000);
-
-},5000);
-
-}
-
-function spawnFlyingCarrot(){
-const c=document.createElement("div");
-c.className="flyingCarrot";
-c.textContent="🥕";
-
-c.style.left=Math.random()*window.innerWidth+"px";
-c.style.top=Math.random()*window.innerHeight+"px";
-
-document.body.appendChild(c);
-
-let dx=(Math.random()-0.5)*10;
-let dy=(Math.random()-0.5)*10;
-
-let t=setInterval(()=>{
-let x=parseFloat(c.style.left);
-let y=parseFloat(c.style.top);
-x+=dx;
-y+=dy;
-c.style.left=x+"px";
-c.style.top=y+"px";
-},30);
-
-setTimeout(()=>{
-clearInterval(t);
-c.remove();
-},30000);
-}
-
-function spawnMutantCarrot(){
-
-const box=document.createElement("div");
-box.className="plant";
-
-const title=document.createElement("b");
-title.textContent="Mutant Carrot 🧬";
-box.appendChild(title);
-
-garden.appendChild(box);
-
-/* store and attach the interval id so shovel can clear it later */
-const intervalId = setInterval(()=>{
-money += 2.1e34;
-updateMoney();
-autoSave();
-},1000);
-box.dataset.interval = intervalId;
-
-}
-
-/* =========================
-   🎉 PLANT PARTY SYSTEM
-========================= */
-
-function startPlantParty(){
-
-if(plantPartyActive) return;
-plantPartyActive=true;
-
-/* 1. Rename all plants permanently */
-document.querySelectorAll(".plant").forEach(box=>{
-  const title=box.querySelector("b");
-  if(!title) return;
-  const current=title.textContent;
-  const partyName=partyNames[current];
-  if(partyName) title.textContent=partyName;
-});
-
-/* 2. Flash screen */
-document.body.classList.add("party-mode");
-
-/* 3. Show banner */
-const banner=document.getElementById("partyBanner");
-banner.style.display="block";
-let timeLeft=60;
-document.getElementById("partyCountdown").textContent=timeLeft;
-
-const countdownTick=setInterval(()=>{
-  timeLeft--;
-  document.getElementById("partyCountdown").textContent=timeLeft;
-  if(timeLeft<=0) clearInterval(countdownTick);
-},1000);
-
-/* 4. Disco mutation to random plant every 2s */
-const discoInterval=setInterval(()=>{
-  const allPlants=document.querySelectorAll(".plant");
-  if(allPlants.length===0) return;
-  const pick=allPlants[Math.floor(Math.random()*allPlants.length)];
-  const title=pick.querySelector("b");
-  if(!title) return;
-  title.classList.remove("silver","gold","rainbow","admin","rickroll");
-  title.classList.add("disco");
-  /* Store the new multiplier on the box so harvesting uses it */
-  pick.dataset.partyDisco="1";
-},2000);
-
-/* 5. End party after 60s */
-setTimeout(()=>{
-  clearInterval(discoInterval);
-  document.body.classList.remove("party-mode");
-  banner.style.display="none";
-  plantPartyActive=false;
-  autoSave();
-},60000);
-
-autoSave();
-}
-
-/* =========================
-   SHOP + GAME LOGIC
-========================= */
-
-function getMutation(){
-let r=Math.random();
-if(r<0.000001) return {m:125,c:"disco"};
-if(r<0.001) return {m:50,c:"rainbow"};
-if(r<0.01) return {m:20,c:"gold"};
-if(r<0.05) return {m:5,c:"silver"};
-return {m:1,c:""};
-}
-
-function addToGarden(p,forceMut){
-
-const box=document.createElement("div");
-box.className="plant";
-
-const title=document.createElement("b");
-
-/* If party is active, use party name */
-const displayName=(plantPartyActive && partyNames[p.name]) ? partyNames[p.name] : p.name;
-title.textContent=displayName;
-
-const mut=forceMut?forceMut:getMutation();
-
-if(mut.c) title.classList.add(mut.c);
-
-box.appendChild(title);
-
-const cd=document.createElement("div");
-cd.className="cooldown";
-box.appendChild(cd);
-
-/* click handler: supports shovel destroying plants (ignores clicks on buttons) */
-box.addEventListener('click', (ev) => {
-  // if user clicked a button inside the plant, don't treat as shovel click
-  if (ev.target && ev.target.closest && ev.target.closest('button')) return;
-  if (shovelMode) {
-    destroyPlant(box);
+const weatherEvents = [
+  {
+    id: "rain",
+    name: "🌧️ Rainstorm",
+    bodyClass: "weather-rain",
+    mutation: "wet",
+    particle: "💧",
+    desc: "Rain pours down! 1% chance/sec per plant for Wet (+1x)"
+  },
+  {
+    id: "snow",
+    name: "❄️ Blizzard",
+    bodyClass: "weather-snow",
+    mutation: "frozen",
+    particle: "❄️",
+    desc: "Icy winds blow! 1% chance/sec per plant for Frozen (+9x)"
+  },
+  {
+    id: "thunderstorm",
+    name: "⚡ Thunderstorm",
+    bodyClass: "weather-thunderstorm",
+    mutation: "shocked",
+    particle: "⚡",
+    desc: "Lightning flashes! 1% chance/sec per plant for Shocked (+99x)"
+  },
+  {
+    id: "windy",
+    name: "🍃 Gale Winds",
+    bodyClass: "weather-windy",
+    mutation: "windstruck",
+    particle: "🍃",
+    desc: "Strong gusts sweep the garden! 1% chance/sec for Windstruck (+2x)"
+  },
+  {
+    id: "heatwave",
+    name: "☀️ Solar Heatwave",
+    bodyClass: "weather-heatwave",
+    mutation: "sunburnt",
+    particle: "☀️",
+    desc: "Blazing sun rays! 1% chance/sec per plant for Sunburnt (+4x)"
+  },
+  {
+    id: "meteorshower",
+    name: "☄️ Meteor Shower",
+    bodyClass: "weather-meteorshower",
+    mutation: "celestial",
+    particle: "☄️",
+    desc: "Shooting stars fall! 1% chance/sec per plant for Celestial (+119x)"
   }
-});
+];
 
-garden.appendChild(box);
+const plants = [
+  { name: "Carrot", type: "single", buy: 10, gain: 18 },
+  { name: "Strawberry", type: "multi", buy: 50, gain: 14 },
+  { name: "Blueberry", type: "multi", buy: 400, gain: 18 },
+  { name: "Buttercup", type: "single", buy: 600, gain: 542 },
+  { name: "Tomato", type: "multi", buy: 800, gain: 27 },
+  { name: "Corn", type: "multi", buy: 1300, gain: 36 },
+  { name: "Daffodil", type: "single", buy: 1000, gain: 1000 },
+  { name: "Watermelon", type: "single", buy: 2500, gain: 2500 },
+  { name: "Pumpkin", type: "single", buy: 3000, gain: 3000 },
+  { name: "Apple", type: "multi", buy: 3250, gain: 248 },
+  { name: "Bamboo", type: "single", buy: 4000, gain: 3999 },
+  { name: "Coconut", type: "multi", buy: 6000, gain: 361 },
+  { name: "Cactus", type: "multi", buy: 15000, gain: 3068 },
+  { name: "Dragonfruit", type: "multi", buy: 50000, gain: 4287 },
+  { name: "Mango", type: "multi", buy: 100000, gain: 5886 },
+  { name: "Mushroom", type: "single", buy: 150000, gain: 136278 },
+  { name: "Grape", type: "multi", buy: 850000, gain: 7085 },
+  { name: "Pepper", type: "multi", buy: 1000000, gain: 7220 },
+  { name: "Cacao", type: "multi", buy: 2500000, gain: 10830 },
+  { name: "Sunflower", type: "multi", buy: 5555555, gain: 50138 },
+  { name: "Beanstalk", type: "multi", buy: 10000000, gain: 25270 },
+  { name: "Sugar Apple", type: "multi", buy: 25000000, gain: 43320 },
+  { name: "Burning Bud", type: "multi", buy: 40000000, gain: 63175 },
+  { name: "Ember Lilly", type: "multi", buy: 50000000, gain: 60166 },
+  { name: "Giant Pinecone", type: "multi", buy: 55000000, gain: 64980 },
+  { name: "Elder Strawberry", type: "multi", buy: 70000000, gain: 81225 },
+  { name: "Romanesco", type: "multi", buy: 88000000, gain: 149815 },
+  { name: "Crimson Thorn", type: "multi", buy: 10000000000, gain: 189525 },
+  { name: "Zebrazincle", type: "multi", buy: 21000000000, gain: 234650 },
+  { name: "Octobloom", type: "multi", buy: 33000000000, gain: 260721 },
+  { name: "Beast Buttercup", type: "single", buy: 500000000000, gain: 2707500 },
+  { name: "Alien Apple", type: "multi", buy: 1000000000000, gain: 902500 }
+];
 
-autoSave();
-
-if(p.type === "clue"){
-  const btn = document.createElement("button");
-  btn.textContent = "Open";
-  btn.onclick = () => alert("e4 e5 nf3 nc6");
-  box.appendChild(btn);
-  return;
+function formatNumber(n) {
+  const units = [
+    "", "K", "M", "B", "T",
+    "Qa", "Qi", "Sx", "Sp", "Oc", "No",
+    "Dc", "Ud", "Dd", "Td", "Qad", "Qid", "Sxd", "Spd", "Od", "Nd",
+    "Vg", "Uvg", "Dvg", "Tvg", "Qavg", "Qivg", "Sxvg", "Spvg", "Ocvg", "Novg"
+  ];
+  if (n < 1000) return Math.floor(n);
+  const tier = Math.floor(Math.log10(n) / 3);
+  if (tier >= units.length) return n.toExponential(2);
+  const scale = Math.pow(10, tier * 3);
+  return (n / scale).toFixed(2) + " " + units[tier];
 }
 
-if(p.type==="single"){
-
-const btn=document.createElement("button");
-btn.textContent="Harvest";
-
-btn.onclick=()=>{
-money += p.gain * mut.m * income.mult;
-updateMoney();
-box.remove();
-autoSave();
-};
-
-box.appendChild(btn);
-
-}else{
-
-let t=5;
-cd.textContent="Harvest in "+t+"s";
-
-const interval=setInterval(()=>{
-
-t--;
-cd.textContent="Harvest in "+t+"s";
-
-if(t<=0){
-money += p.gain * mut.m * income.mult;
-updateMoney();
-autoSave();
-t=5;
+function showToast(msg, ms = 1600) {
+  toastDiv.textContent = msg;
+  toastDiv.style.display = "block";
+  clearTimeout(toastDiv._timer);
+  toastDiv._timer = setTimeout(() => {
+    toastDiv.style.display = "none";
+  }, ms);
 }
 
-},1000);
-
-/* store interval so shovel can stop it later */
-box.dataset.interval = interval;
-
+function updateMoney() {
+  moneyDiv.textContent = "Money: " + formatNumber(money);
 }
 
-}
-
-/* Permanently destroy a plant element and stop any generators, then save */
-function destroyPlant(box){
+/* =====================
+   MUTATION MATH & RENDER
+===================== */
+function getPlantMutations(box) {
   try {
-    // clear any stored interval on this box
-    if (box && box.dataset && box.dataset.interval) {
-      const iid = Number(box.dataset.interval);
-      if (!isNaN(iid)) clearInterval(iid);
-      delete box.dataset.interval;
-    }
-    // remove from DOM
-    if (box && box.parentNode) box.parentNode.removeChild(box);
-    // persist removal so localStorage won't recreate it
-    autoSave();
-    showToast('Shoveled plant');
-  } catch (e) {
-    console.error('destroyPlant error', e);
+    return JSON.parse(box.dataset.mutations || "[]");
+  } catch {
+    return [];
   }
 }
 
-function buyPlant(p){
-if(money<p.buy) return alert("Not enough money");
-
-money-=p.buy;
-updateMoney();
-
-addToGarden(p);
-
-if(p.name === "Daffodil" && clueUnlocked){
-  addToGarden(plants.find(x => x.name === "Clue"), {m:1, c:""});
-}
+// Additive multiplier: base 1 + sum of all active mutation bonuses
+function getAdditiveMultiplier(box) {
+  const mutList = getPlantMutations(box);
+  let total = 1;
+  for (const key of mutList) {
+    if (mutations[key]) total += mutations[key].bonus;
+  }
+  return total;
 }
 
-function createShop(){
+function renderPlantVisuals(box) {
+  const mutList = getPlantMutations(box);
+  const titleEl = box.querySelector(".plant-title");
+  const tagsEl = box.querySelector(".mut-tags");
+  const multEl = box.querySelector(".mult-summary");
 
-const shop=document.getElementById("shop");
-
-plants.filter(p=>p.buy>0).forEach(p=>{
-
-const d=document.createElement("div");
-d.className="item";
-
-d.innerHTML=`<b>${p.name}</b><br>Buy:${formatNumber(p.buy)}<br>Gives:${formatNumber(p.gain)}<br><button>Buy</button>`;
-
-d.querySelector("button").onclick=()=>buyPlant(p);
-
-if(p.name === "Carrot"){
-  d.addEventListener("click", (e) => {
-    if(e.target.closest("button")) return; // Buy button doesn't count
-    if(clueUnlocked) return;
-    carrotShopClicks++;
-    if(carrotShopClicks >= 3){
-      clueUnlocked = true;
-      localStorage.setItem("gardenClueUnlocked", "1");
-      showToast("Something new is growing...");
+  if (titleEl) {
+    Object.values(mutations).forEach(m => titleEl.classList.remove(m.cls));
+    if (mutList.length > 0) {
+      const topMut = mutations[mutList[mutList.length - 1]];
+      if (topMut) titleEl.classList.add(topMut.cls);
     }
+  }
+
+  if (tagsEl) {
+    tagsEl.innerHTML = "";
+    mutList.forEach(key => {
+      const m = mutations[key];
+      if (!m) return;
+      const badge = document.createElement("span");
+      badge.className = "mut-badge " + m.cls;
+      badge.textContent = `${m.label} +${m.bonus}x`;
+      tagsEl.appendChild(badge);
+    });
+  }
+
+  if (multEl) {
+    const totalMult = getAdditiveMultiplier(box);
+    multEl.textContent = `Multiplier: ${totalMult}x`;
+  }
+}
+
+function addMutation(box, key, notify = true) {
+  if (!mutations[key]) return false;
+  const mutList = getPlantMutations(box);
+  if (mutList.includes(key)) return false;
+  mutList.push(key);
+  box.dataset.mutations = JSON.stringify(mutList);
+  renderPlantVisuals(box);
+  if (notify) {
+    const name = box.querySelector(".plant-title")?.textContent || "Plant";
+    showToast(`✨ ${name} gained ${mutations[key].label} (+${mutations[key].bonus}x)!`);
+  }
+  return true;
+}
+
+function rollInitialMutation() {
+  const r = Math.random();
+  if (r < 0.00001) return ["disco"];
+  if (r < 0.002) return ["rainbow"];
+  if (r < 0.015) return ["gold"];
+  if (r < 0.07) return ["silver"];
+  return [];
+}
+
+/* =====================
+   WEATHER SYSTEM + EFFECTS
+===================== */
+function triggerLightningFlash() {
+  const flash = document.getElementById("lightningFlash");
+  flash.style.opacity = "0.85";
+  setTimeout(() => { flash.style.opacity = "0"; }, 90);
+  setTimeout(() => {
+    flash.style.opacity = "0.45";
+    setTimeout(() => { flash.style.opacity = "0"; }, 70);
+  }, 160);
+}
+
+function spawnWindStreak() {
+  const layer = document.getElementById("weatherEffectsLayer");
+  const streak = document.createElement("div");
+  streak.className = "wind-streak";
+  streak.style.top = (Math.random() * window.innerHeight) + "px";
+  streak.style.left = "-110px";
+  layer.appendChild(streak);
+
+  let x = -110;
+  const speed = 16 + Math.random() * 10;
+  const timer = setInterval(() => {
+    x += speed;
+    streak.style.left = x + "px";
+    if (x > window.innerWidth + 120) {
+      clearInterval(timer);
+      streak.remove();
+    }
+  }, 20);
+}
+
+function spawnWeatherParticle(weather) {
+  if (weather.id === "windy" && Math.random() < 0.65) {
+    spawnWindStreak();
+  }
+
+  const layer = document.getElementById("weatherEffectsLayer");
+  const el = document.createElement("div");
+  el.className = "weather-particle";
+  el.textContent = weather.particle;
+
+  let x = Math.random() * window.innerWidth;
+  let y = weather.id === "meteorshower" ? -30 : -20;
+  el.style.left = x + "px";
+  el.style.top = y + "px";
+  layer.appendChild(el);
+
+  let vx = 0;
+  let vy = 5 + Math.random() * 4;
+
+  if (weather.id === "windy") {
+    vx = 6 + Math.random() * 4;
+    vy = 2 + Math.random() * 2;
+  } else if (weather.id === "meteorshower") {
+    vx = -5 - Math.random() * 3;
+    vy = 8 + Math.random() * 5;
+  } else if (weather.id === "snow") {
+    vx = (Math.random() - 0.5) * 2;
+    vy = 2 + Math.random() * 2;
+  }
+
+  const timer = setInterval(() => {
+    x += vx;
+    y += vy;
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    if (y > window.innerHeight + 40 || x < -60 || x > window.innerWidth + 60) {
+      clearInterval(timer);
+      el.remove();
+    }
+  }, 25);
+}
+
+function startRandomWeather() {
+  if (activeWeather) return;
+  const chosen = weatherEvents[Math.floor(Math.random() * weatherEvents.length)];
+  activeWeather = chosen;
+
+  document.body.classList.add(chosen.bodyClass);
+
+  const banner = document.getElementById("weatherBanner");
+  const textEl = document.getElementById("weatherText");
+  const countEl = document.getElementById("weatherCountdown");
+
+  let secondsLeft = 60;
+  textEl.textContent = `${chosen.name} — ${chosen.desc}`;
+  countEl.textContent = secondsLeft;
+  banner.style.display = "block";
+
+  if (chosen.id === "thunderstorm") {
+    triggerLightningFlash();
+  }
+
+  weatherEffectInterval = setInterval(() => {
+    spawnWeatherParticle(chosen);
+    if (chosen.id === "thunderstorm" && Math.random() < 0.08) {
+      triggerLightningFlash();
+    }
+  }, 240);
+
+  const tickInterval = setInterval(() => {
+    secondsLeft--;
+    countEl.textContent = secondsLeft;
+
+    let changed = false;
+    document.querySelectorAll(".plant").forEach(box => {
+      // 1% chance every second per plant to get the weather mutation
+      if (Math.random() < 0.01) {
+        if (addMutation(box, chosen.mutation, true)) {
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) autoSave();
+
+    if (secondsLeft <= 0) {
+      clearInterval(tickInterval);
+      clearInterval(weatherEffectInterval);
+      document.body.classList.remove(chosen.bodyClass);
+      document.getElementById("weatherEffectsLayer").innerHTML = "";
+      banner.style.display = "none";
+      activeWeather = null;
+    }
+  }, 1000);
+}
+
+// Every 5 minutes (300,000 ms), trigger a random weather event for 1 minute
+setInterval(startRandomWeather, 300000);
+
+/* =====================
+   GARDEN & SHOP
+===================== */
+function addToGarden(plantObj, forcedMutations = null) {
+  const box = document.createElement("div");
+  box.className = "plant";
+
+  const title = document.createElement("span");
+  title.className = "plant-title";
+  title.textContent = plantObj.name;
+  box.appendChild(title);
+
+  const tags = document.createElement("div");
+  tags.className = "mut-tags";
+  box.appendChild(tags);
+
+  const multBadge = document.createElement("div");
+  multBadge.className = "mult-summary";
+  box.appendChild(multBadge);
+
+  const cd = document.createElement("div");
+  cd.className = "cooldown";
+  box.appendChild(cd);
+
+  const initialMuts = Array.isArray(forcedMutations) ? forcedMutations : rollInitialMutation();
+  box.dataset.mutations = JSON.stringify(initialMuts);
+  renderPlantVisuals(box);
+
+  box.addEventListener("click", (ev) => {
+    if (ev.target && ev.target.closest && ev.target.closest("button")) return;
+    if (shovelMode) destroyPlant(box);
+  });
+
+  if (plantObj.type === "single") {
+    const btn = document.createElement("button");
+    btn.textContent = `Harvest (+${formatNumber(plantObj.gain)})`;
+    btn.onclick = () => {
+      const mult = getAdditiveMultiplier(box);
+      money += plantObj.gain * mult;
+      updateMoney();
+      box.remove();
+      autoSave();
+    };
+    box.appendChild(btn);
+  } else {
+    let t = 5;
+    cd.textContent = `Auto-harvest in ${t}s`;
+    const interval = setInterval(() => {
+      t--;
+      cd.textContent = `Auto-harvest in ${t}s`;
+      if (t <= 0) {
+        const mult = getAdditiveMultiplier(box);
+        money += plantObj.gain * mult;
+        updateMoney();
+        autoSave();
+        t = 5;
+      }
+    }, 1000);
+    box.dataset.interval = interval;
+  }
+
+  gardenDiv.appendChild(box);
+  refreshShovelVisuals();
+  autoSave();
+}
+
+function destroyPlant(box) {
+  if (box.dataset.interval) {
+    clearInterval(Number(box.dataset.interval));
+    delete box.dataset.interval;
+  }
+  box.remove();
+  autoSave();
+  showToast("🪓 Removed plant with shovel");
+}
+
+function buyPlant(plantObj) {
+  if (money < plantObj.buy) {
+    showToast("❌ Not enough money!");
+    return;
+  }
+  money -= plantObj.buy;
+  updateMoney();
+  addToGarden(plantObj);
+}
+
+function createShop() {
+  shopDiv.innerHTML = "";
+  plants.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "item";
+    card.innerHTML = `
+      <span class="item-name">${p.name}</span>
+      <div class="item-stats">
+        Type: <b>${p.type === "single" ? "Single Harvest" : "Auto Every 5s"}</b><br>
+        Cost: <b>${formatNumber(p.buy)}</b><br>
+        Base Yield: <b>${formatNumber(p.gain)}</b>
+      </div>
+      <button>Buy</button>
+    `;
+    card.querySelector("button").onclick = () => buyPlant(p);
+    shopDiv.appendChild(card);
   });
 }
 
-shop.appendChild(d);
-
-});
-
-}
-
-/* =========================
-   ADMIN SYSTEM
-========================= */
-
-function runAdminCommand(){
-
-if(!devMode) return;
-
-const cmd=document.getElementById("adminCommand").value.trim();
-
-/* PLANT PARTY */
-if(cmd.startsWith("/plantparty")){
-startPlantParty();
-return;
-}
-
-/* CARROTS EVENT */
-if(cmd.startsWith("/carrots")){
-startCarrotEvent();
-autoSave();
-}
-
-else if(cmd.startsWith("/spawn(")){
-
-const matches=cmd.match(/\/spawn\((.*?)\)\((.*?)\)/);
-if(!matches) return;
-
-const plantName=matches[1].trim().toLowerCase();
-const mutation=matches[2].trim().toLowerCase();
-
-const p=plants.find(x=>x.name.toLowerCase().replaceAll(" ","")===plantName);
-if(!p) return alert("Plant not found");
-
-let mut={m:1,c:""};
-
-if(mutation==="silver") mut={m:5,c:"silver"};
-if(mutation==="gold") mut={m:20,c:"gold"};
-if(mutation==="rainbow") mut={m:50,c:"rainbow"};
-if(mutation==="disco") mut={m:125,c:"disco"};
-if(mutation==="admin") mut={m:1000000,c:"admin"};
-if(mutation==="rickroll") mut={m:1e100,c:"rickroll"};
-
-addToGarden(p,mut);
-autoSave();
-
-}
-
-else if(cmd.startsWith("/givemoney(")){
-
-const match=cmd.match(/\/givemoney\((.*?)\)/);
-if(!match) return;
-
-let amount=Number(match[1]);
-if(isNaN(amount)) return alert("Invalid number");
-
-money+=amount;
-updateMoney();
-autoSave();
-
-}
-
-else if(cmd.startsWith("/mutateall(")){
-
-const match=cmd.match(/\/mutateall\((.*?)\)/);
-if(!match) return;
-
-const mutation=match[1].trim().toLowerCase();
-
-let mut={m:1,c:""};
-
-if(mutation==="silver") mut={m:5,c:"silver"};
-if(mutation==="gold") mut={m:20,c:"gold"};
-if(mutation==="rainbow") mut={m:50,c:"rainbow"};
-if(mutation==="disco") mut={m:125,c:"disco"};
-if(mutation==="admin") mut={m:1000000,c:"admin"};
-if(mutation==="rickroll") mut={m:1e100,c:"rickroll"};
-
-document.querySelectorAll(".plant").forEach(box=>{
-  const title=box.querySelector("b");
-  title.classList.remove("silver","gold","rainbow","disco","admin","rickroll");
-  if(mut.c) title.classList.add(mut.c);
-});
-
-autoSave();
-
-}
-
-else if(cmd.startsWith("/incomemultiplier(")){
-
-const match=cmd.match(/\/incomemultiplier\((.*?)\)/);
-if(!match) return;
-
-let value=Number(match[1]);
-
-if(isNaN(value) || value<=0){
-alert("Invalid multiplier");
-return;
-}
-
-income.mult=value;
-alert("Income multiplier set to x"+value);
-autoSave();
-
-}
-
-else if(cmd.startsWith("/deleteall")){
-
-document.querySelectorAll(".plant").forEach(box=>{
-  if (box && box.dataset && box.dataset.interval) {
-    const iid = Number(box.dataset.interval);
-    if (!isNaN(iid)) clearInterval(iid);
-  }
-  box.remove();
-});
-
-autoSave();
-alert("All plants deleted!");
-
-}
-
-}
-
-/* =========================
-   UI CONTROLS
-========================= */
-
-function openAdmin(){
-document.getElementById("adminPanel").style.display="block";
-}
-
-function closeAdmin(){
-document.getElementById("adminPanel").style.display="none";
-}
-
-function unlockAdmin(){
-
-const pass=document.getElementById("adminPassword").value;
-
-if(pass==="0598"){
-
-devMode=true;
-document.getElementById("adminTools").style.display="block";
-alert("Admin mode activated!");
-
-}else{
-alert("Wrong password");
-}
-
-}
-
-/* SAVE / LOAD */
-
-/* Maps CSS class → income multiplier, kept in sync with getMutation + spawn logic */
-const mutMultipliers={
-  "":1,
-  "silver":5,
-  "gold":20,
-  "rainbow":50,
-  "disco":125,
-  "admin":1000000,
-  "rickroll":1e100
-};
-
-function getMutClass(classList){
-  for(const c of ["rickroll","admin","disco","rainbow","gold","silver"]){
-    if(classList.contains(c)) return c;
-  }
-  return "";
-}
-
-function getPlantData(){
-const plantData=[];
-document.querySelectorAll(".plant").forEach(box=>{
-const title=box.querySelector("b");
-const mutClass=getMutClass(title.classList);
-plantData.push({
-name:title.textContent,
-mutClass:mutClass,
-mutMult:mutMultipliers[mutClass]??1
-});
-});
-return plantData;
-}
-
-function saveGame(){
-localStorage.setItem("gardenMoney",money);
-localStorage.setItem("gardenPlants",JSON.stringify(getPlantData()));
-alert("Saved!");
-}
-
-function autoSave(){
-localStorage.setItem("gardenMoney",money);
-localStorage.setItem("gardenPlants",JSON.stringify(getPlantData()));
-}
-
-function loadGame(){
-
-const savedMoney=localStorage.getItem("gardenMoney");
-const savedPlants=localStorage.getItem("gardenPlants");
-
-if(savedMoney) money=Number(savedMoney);
-
-if(savedPlants){
-
-JSON.parse(savedPlants).forEach(item=>{
-
-/* Try exact name match first (handles already-renamed party names) */
-let p=plants.find(x=>x.name===item.name);
-
-/* If not found, try matching against party names */
-if(!p){
-  const originalName=Object.keys(partyNames).find(k=>partyNames[k]===item.name);
-  if(originalName) p=plants.find(x=>x.name===originalName);
-}
-
-if(!p) return;
-
-/* Build forceMut from saved data so the multiplier closure is correct */
-const savedClass = item.mutClass ?? "";
-const savedMult  = item.mutMult  ?? (mutMultipliers[savedClass] ?? 1);
-const forceMut   = { m: savedMult, c: savedClass };
-
-addToGarden(p, forceMut);
-
-/* Restore the exact saved name (party names persist after rename) */
-const boxes=document.querySelectorAll(".plant");
-const lastBox=boxes[boxes.length-1];
-if(lastBox){
-  const title=lastBox.querySelector("b");
-  if(title) title.textContent=item.name;
-}
-
-});
-
-}
-
-}
-
-function resetGame(){
-
-if(!confirm("Delete all saved data?")) return;
-
-localStorage.removeItem("gardenMoney");
-localStorage.removeItem("gardenPlants");
-localStorage.removeItem("gardenClueUnlocked");
-clueUnlocked = false;
-carrotShopClicks = 0;
-
-money=10;
-garden.innerHTML="";
-
-updateMoney();
-
-alert("Reset!");
-}
-
-/* =========================
-   SHOVEL: toggle with "S", click plants to destroy permanently
-   - shovelMode toggles with S
-   - visual: body.shovel-active and .shovel-mode on plants
-   - destroyPlant clears any stored interval on the element and autoSaves
-========================= */
-
-let shovelMode = false;
-
-function showToast(text, ms = 1100) {
-  toast.textContent = text;
-  toast.style.display = 'block';
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => { toast.style.display = 'none'; }, ms);
-}
-
+/* =====================
+   SHOVEL TOOL
+===================== */
 function setShovel(on) {
   shovelMode = !!on;
-  if (shovelMode) {
-    document.body.classList.add('shovel-active');
-    document.querySelectorAll('.plant').forEach(el => el.classList.add('shovel-mode'));
-    showToast('Shovel equipped');
-  } else {
-    document.body.classList.remove('shovel-active');
-    document.querySelectorAll('.plant').forEach(el => el.classList.remove('shovel-mode'));
-    showToast('Shovel unequipped');
+  const topBtn = document.getElementById("shovelTopBtn");
+  const mobBtn = document.getElementById("mobileShovelBtn");
+  const label = shovelMode ? "🪓 Shovel: ON" : "🪓 Shovel: OFF";
+
+  if (topBtn) {
+    topBtn.textContent = label;
+    topBtn.classList.toggle("active-shovel", shovelMode);
   }
+  if (mobBtn) {
+    mobBtn.textContent = label;
+    mobBtn.classList.toggle("active-shovel", shovelMode);
+  }
+
+  document.body.classList.toggle("shovel-active", shovelMode);
+  refreshShovelVisuals();
+  showToast(shovelMode ? "🪓 Shovel ON — tap a plant to remove" : "Shovel OFF");
 }
 
-// toggle shovel with "S"
-document.addEventListener('keydown', (e) => {
-  if (e.key && e.key.toLowerCase() === 's') {
+function refreshShovelVisuals() {
+  document.querySelectorAll(".plant").forEach(el => {
+    el.classList.toggle("shovel-mode", shovelMode);
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+  if (e.key && e.key.toLowerCase() === "s") {
     setShovel(!shovelMode);
   }
 });
 
-// When new plants are added/loaded the visual state should reflect current shovel mode.
-// (We already add/remove .shovel-mode in addToGarden and loadGame uses addToGarden)
-function refreshShovelVisuals() {
-  if (shovelMode) {
-    document.querySelectorAll('.plant').forEach(el => el.classList.add('shovel-mode'));
-    document.body.classList.add('shovel-active');
-  } else {
-    document.querySelectorAll('.plant').forEach(el => el.classList.remove('shovel-mode'));
-    document.body.classList.remove('shovel-active');
+/* =====================
+   SAVE & LOAD
+===================== */
+function getPlantSaveData() {
+  return Array.from(document.querySelectorAll(".plant")).map(box => ({
+    name: box.querySelector(".plant-title")?.textContent || "",
+    mutations: getPlantMutations(box)
+  }));
+}
+
+function saveGame() {
+  localStorage.setItem("gag_money", String(money));
+  localStorage.setItem("gag_plants", JSON.stringify(getPlantSaveData()));
+  showToast("💾 Game saved!");
+}
+
+function autoSave() {
+  localStorage.setItem("gag_money", String(money));
+  localStorage.setItem("gag_plants", JSON.stringify(getPlantSaveData()));
+}
+
+function loadGame() {
+  const savedMoney = localStorage.getItem("gag_money");
+  const savedPlants = localStorage.getItem("gag_plants");
+
+  if (savedMoney !== null && !isNaN(Number(savedMoney))) {
+    money = Number(savedMoney);
+  }
+
+  if (savedPlants) {
+    try {
+      const list = JSON.parse(savedPlants);
+      list.forEach(item => {
+        const plantObj = plants.find(p => p.name === item.name);
+        if (!plantObj) return;
+        const validMuts = Array.isArray(item.mutations)
+          ? item.mutations.filter(m => mutations[m])
+          : [];
+        addToGarden(plantObj, validMuts);
+      });
+    } catch (err) {
+      console.error("Failed to load plants:", err);
+    }
   }
 }
 
-/* INIT */
-
-document.addEventListener("keydown",e=>{
-if(e.key==="b" || e.key==="B"){
-openAdmin();
+function resetGame() {
+  if (!confirm("Reset your money and garden?")) return;
+  localStorage.removeItem("gag_money");
+  localStorage.removeItem("gag_plants");
+  money = 10;
+  document.querySelectorAll(".plant").forEach(box => {
+    if (box.dataset.interval) clearInterval(Number(box.dataset.interval));
+  });
+  gardenDiv.innerHTML = "";
+  updateMoney();
+  showToast("🗑 Garden reset!");
 }
-});
 
-loadGame();
+/* =====================
+   LIVE SPOTLIGHT TUTORIAL
+===================== */
+const tutorialSteps = [
+  {
+    selector: "#money",
+    title: "Your Money Balance",
+    desc: "This tracks your cash. Spend it in the Shop to buy seeds and grow your garden."
+  },
+  {
+    selector: "#shop",
+    title: "Plant Shop",
+    desc: "Click or tap Buy on any plant card here. Single plants pay out when harvested; multi plants auto-harvest every 5 seconds."
+  },
+  {
+    selector: "#garden",
+    title: "Your Garden & Additive Mutations",
+    desc: "Planted items appear here. Mutations ADD together (+4x + +1x = 6x total) and show right on each card!"
+  },
+  {
+    selector: "#weatherBanner",
+    title: "Weather Events (Every 5 Mins)",
+    desc: "Every 5 minutes, a weather event runs for 1 minute with live screen effects and a 1%/sec chance per plant to add its mutation."
+  },
+  {
+    selector: window.innerWidth <= 600 ? "#mobileBar" : "#topControls",
+    title: "Shovel & Controls",
+    desc: "Toggle the Shovel (press S on desktop or use the bar on mobile) to remove plants, or save your progress anytime."
+  }
+];
+
+let tutIndex = 0;
+let currentHighlightedEl = null;
+
+function clearHighlight() {
+  if (currentHighlightedEl) {
+    currentHighlightedEl.classList.remove("tutorial-highlight");
+    currentHighlightedEl = null;
+  }
+}
+
+function positionTooltip(targetEl) {
+  const tooltip = document.getElementById("tutorialTooltip");
+  tooltip.style.display = "block";
+
+  if (!targetEl) {
+    tooltip.style.top = "50%";
+    tooltip.style.left = "50%";
+    tooltip.style.transform = "translate(-50%, -50%)";
+    return;
+  }
+
+  targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  setTimeout(() => {
+    const rect = targetEl.getBoundingClientRect();
+    const tipRect = tooltip.getBoundingClientRect();
+    tooltip.style.transform = "none";
+
+    let left = Math.min(
+      Math.max(12, rect.left + rect.width / 2 - tipRect.width / 2),
+      window.innerWidth - tipRect.width - 12
+    );
+
+    let top = rect.bottom + 14;
+    if (top + tipRect.height > window.innerHeight - 16) {
+      top = Math.max(12, rect.top - tipRect.height - 14);
+    }
+
+    tooltip.style.left = left + "px";
+    tooltip.style.top = top + "px";
+  }, 160);
+}
+
+function renderTutorialStep() {
+  clearHighlight();
+  const step = tutorialSteps[tutIndex];
+  const el = document.querySelector(step.selector);
+
+  // Temporarily show weather banner during its spotlight step if hidden
+  const banner = document.getElementById("weatherBanner");
+  const wasBannerHidden = banner.style.display === "none";
+  if (step.selector === "#weatherBanner" && wasBannerHidden) {
+    document.getElementById("weatherText").textContent = "Preview: 🌧️ Rainstorm — 1%/sec for Wet (+1x)";
+    document.getElementById("weatherCountdown").textContent = "60";
+    banner.style.display = "block";
+    banner.dataset.preview = "1";
+  } else if (banner.dataset.preview === "1" && step.selector !== "#weatherBanner") {
+    banner.style.display = "none";
+    delete banner.dataset.preview;
+  }
+
+  if (el) {
+    el.classList.add("tutorial-highlight");
+    currentHighlightedEl = el;
+  }
+
+  document.getElementById("tutTitle").textContent = step.title;
+  document.getElementById("tutDesc").textContent = step.desc;
+  document.getElementById("tutStepCount").textContent = `${tutIndex + 1} / ${tutorialSteps.length}`;
+  document.getElementById("tutPrevBtn").disabled = tutIndex === 0;
+  document.getElementById("tutNextBtn").textContent = tutIndex === tutorialSteps.length - 1 ? "Finish" : "Next";
+
+  positionTooltip(el);
+}
+
+function startLiveTutorial() {
+  tutIndex = 0;
+  document.getElementById("spotlightBackdrop").style.display = "block";
+  renderTutorialStep();
+}
+
+function stepTutorial(delta) {
+  const nextIdx = tutIndex + delta;
+  if (nextIdx < 0) return;
+  if (nextIdx >= tutorialSteps.length) {
+    endLiveTutorial();
+    return;
+  }
+  tutIndex = nextIdx;
+  renderTutorialStep();
+}
+
+function endLiveTutorial() {
+  clearHighlight();
+  document.getElementById("spotlightBackdrop").style.display = "none";
+  document.getElementById("tutorialTooltip").style.display = "none";
+  const banner = document.getElementById("weatherBanner");
+  if (banner.dataset.preview === "1") {
+    banner.style.display = "none";
+    delete banner.dataset.preview;
+  }
+  localStorage.setItem("gag_tut_done", "1");
+}
+
+/* INIT */
 createShop();
+loadGame();
 updateMoney();
-refreshShovelVisuals();
 
-/* Helpful: keep shovel visuals updated when loading/saving plants */
-const observer = new MutationObserver(()=>refreshShovelVisuals());
-observer.observe(garden, { childList: true, subtree: false });
-
+if (!localStorage.getItem("gag_tut_done")) {
+  startLiveTutorial();
+}
 </script>
 </body>
 </html>
